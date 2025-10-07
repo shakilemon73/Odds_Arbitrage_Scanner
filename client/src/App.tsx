@@ -28,6 +28,16 @@ function DashboardWrapper() {
   const [minProfit, setMinProfit] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  const { data: settings } = useQuery({
+    queryKey: ["/api/settings"],
+    queryFn: async () => {
+      const response = await fetch("/api/settings");
+      if (!response.ok) throw new Error("Failed to fetch settings");
+      return response.json();
+    },
+    staleTime: 60000,
+  });
+
   const buildQueryUrl = () => {
     const params = new URLSearchParams();
     params.append("sports", selectedSport);
@@ -68,8 +78,8 @@ function DashboardWrapper() {
       }
       return response.json();
     },
-    refetchInterval: 30000,
-    staleTime: 30000,
+    refetchInterval: (settings?.autoRefreshInterval || 30) * 1000,
+    staleTime: (settings?.autoRefreshInterval || 30) * 1000,
   });
 
   const availableBookmakers = useMemo<BookmakerWithCount[]>(() => {

@@ -49,6 +49,16 @@ export default function Dashboard({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
+  const { data: settings } = useQuery({
+    queryKey: ["/api/settings"],
+    queryFn: async () => {
+      const response = await fetch("/api/settings");
+      if (!response.ok) throw new Error("Failed to fetch settings");
+      return response.json();
+    },
+    staleTime: 60000,
+  });
+
   const buildQueryUrl = () => {
     const params = new URLSearchParams();
     params.append("sports", selectedSport);
@@ -95,8 +105,8 @@ export default function Dashboard({
       }
       return response.json();
     },
-    refetchInterval: 30000,
-    staleTime: 30000,
+    refetchInterval: (settings?.autoRefreshInterval || 30) * 1000,
+    staleTime: (settings?.autoRefreshInterval || 30) * 1000,
   });
 
   const opportunities = data?.opportunities || [];
