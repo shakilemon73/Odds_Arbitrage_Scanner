@@ -6,10 +6,62 @@ import { findAllArbitrageOpportunities } from "./arbitrage-engine";
 import { 
   getOddsRequestSchema,
   type Sport,
+  type SportInput,
   type GetOddsResponse,
   type HealthCheckResponse 
 } from "@shared/schema";
 import { z } from "zod";
+
+// ============================================================================
+// SPORT CATEGORY MAPPING
+// ============================================================================
+
+/**
+ * Maps general sport categories to their specific league codes
+ */
+function mapSportInputToLeagues(sportInput: SportInput): Sport[] {
+  const sportMap: Record<string, Sport[]> = {
+    "soccer": [
+      "soccer_epl",
+      "soccer_spain_la_liga",
+      "soccer_germany_bundesliga",
+      "soccer_italy_serie_a",
+      "soccer_france_ligue_one",
+      "soccer_usa_mls"
+    ],
+    "basketball": ["basketball_nba", "basketball_ncaab"],
+    "football": ["americanfootball_nfl", "americanfootball_ncaaf"],
+    "baseball": ["baseball_mlb"],
+    "hockey": ["icehockey_nhl"],
+    "mma": ["mma_mixed_martial_arts"],
+  };
+
+  // If it's a general category, return the mapped leagues
+  if (sportInput in sportMap) {
+    return sportMap[sportInput];
+  }
+
+  // If it's "all", return ALL available sport leagues
+  if (sportInput === "all") {
+    return [
+      "soccer_epl", "soccer_spain_la_liga", "soccer_germany_bundesliga", 
+      "soccer_italy_serie_a", "soccer_france_ligue_one", "soccer_usa_mls",
+      "basketball_nba", "basketball_ncaab",
+      "americanfootball_nfl", "americanfootball_ncaaf",
+      "baseball_mlb",
+      "icehockey_nhl",
+      "mma_mixed_martial_arts"
+    ];
+  }
+  
+  // If it's "upcoming", return upcoming
+  if (sportInput === "upcoming") {
+    return ["upcoming"];
+  }
+
+  // Otherwise it's already a specific league code, return as-is
+  return [sportInput as Sport];
+}
 
 // ============================================================================
 // API ROUTES FOR ARBITRAGE SCANNER
@@ -45,12 +97,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[API] Fetching odds using ${provider.getName()}`);
       
-      // Default to 'upcoming' which returns games across all sports
-      // This is always valid and doesn't require specific sport keys
-      const sports = (validated.sports || ["upcoming"]) as Sport[];
+      // Map general sport categories to specific leagues
+      const sportInputs = validated.sports || ["upcoming"];
+      const sports = sportInputs.flatMap(mapSportInputToLeagues);
+      
+      // Remove duplicates
+      const uniqueSports = Array.from(new Set(sports)) as Sport[];
+      
+      // Log which sports are being fetched for debugging
+      console.log(`[API] Fetching odds for sports:`, uniqueSports);
       
       // Fetch odds from provider
-      const oddsData = await provider.fetchOdds(sports);
+      const oddsData = await provider.fetchOdds(uniqueSports);
       
       // Calculate arbitrage opportunities
       const opportunities = findAllArbitrageOpportunities(

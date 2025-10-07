@@ -10,6 +10,8 @@ export const bookmakerOddsSchema = z.object({
   outcome: z.string(),
   odds: z.number().positive(),
   stake: z.number().nonnegative(),
+  ev: z.number().optional(),
+  evDollars: z.number().optional(),
 });
 
 export type BookmakerOdds = z.infer<typeof bookmakerOddsSchema>;
@@ -84,13 +86,30 @@ export const sportSchema = z.enum([
 
 export type Sport = z.infer<typeof sportSchema>;
 
+// General sport categories for user-friendly filters (mapped to specific leagues in routes)
+export const generalSportSchema = z.enum([
+  "all",
+  "soccer",
+  "basketball",
+  "football",
+  "baseball",
+  "hockey",
+  "mma",
+]);
+
+export type GeneralSport = z.infer<typeof generalSportSchema>;
+
+// Flexible sport input that accepts both general categories and specific league codes
+export const sportInputSchema = z.union([sportSchema, generalSportSchema]);
+export type SportInput = z.infer<typeof sportInputSchema>;
+
 // Market types
 export const marketTypeSchema = z.enum(["h2h", "spreads", "totals"]);
 export type MarketType = z.infer<typeof marketTypeSchema>;
 
 // API request/response schemas
 export const getOddsRequestSchema = z.object({
-  sports: z.array(sportSchema).optional(),
+  sports: z.array(sportInputSchema).optional(),
   minProfit: z.number().min(0).max(100).optional(),
   bookmakers: z.array(z.string()).optional(),
 });

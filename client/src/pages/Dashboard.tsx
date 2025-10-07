@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardHeader from "@/components/DashboardHeader";
-import FilterBar from "@/components/FilterBar";
+import FilterBar, { type BookmakerWithCount } from "@/components/FilterBar";
 import ArbitrageCard, { type ArbitrageOpportunity } from "@/components/ArbitrageCard";
 import EmptyState from "@/components/EmptyState";
 import SettingsDialog from "@/components/SettingsDialog";
@@ -23,9 +23,8 @@ export default function Dashboard() {
   const buildQueryUrl = () => {
     const params = new URLSearchParams();
     
-    if (selectedSport !== "all") {
-      params.append("sports", selectedSport);
-    }
+    // Always send sports parameter (including "all")
+    params.append("sports", selectedSport);
     
     if (minProfit > 0) {
       params.append("minProfit", minProfit.toString());
@@ -73,6 +72,30 @@ export default function Dashboard() {
 
   const opportunities = data?.opportunities || [];
 
+  // Extract and count bookmakers from opportunities data
+  const availableBookmakers = useMemo<BookmakerWithCount[]>(() => {
+    if (!data?.opportunities || data.opportunities.length === 0) {
+      return [];
+    }
+
+    // Count how many times each bookmaker appears
+    const bookmakerCounts = new Map<string, number>();
+    
+    data.opportunities.forEach(opp => {
+      opp.bookmakers.forEach(b => {
+        bookmakerCounts.set(b.name, (bookmakerCounts.get(b.name) || 0) + 1);
+      });
+    });
+
+    // Convert to array with counts
+    const bookmakersWithCounts: BookmakerWithCount[] = Array.from(bookmakerCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count); // Sort by count descending (most popular first)
+
+    // Limit to top 15 bookmakers
+    return bookmakersWithCounts.slice(0, 15);
+  }, [data?.opportunities]);
+
   const handleRefresh = () => {
     refetch();
   };
@@ -113,6 +136,7 @@ export default function Dashboard() {
           selectedSport={selectedSport}
           selectedBookmakers={selectedBookmakers}
           minProfit={minProfit}
+          availableBookmakers={availableBookmakers}
           onSportChange={setSelectedSport}
           onBookmakerToggle={handleBookmakerToggle}
           onMinProfitChange={setMinProfit}
@@ -145,6 +169,7 @@ export default function Dashboard() {
         selectedSport={selectedSport}
         selectedBookmakers={selectedBookmakers}
         minProfit={minProfit}
+        availableBookmakers={availableBookmakers}
         onSportChange={setSelectedSport}
         onBookmakerToggle={handleBookmakerToggle}
         onMinProfitChange={setMinProfit}
@@ -171,7 +196,7 @@ export default function Dashboard() {
               <ArbitrageCard
                 key={opp.id}
                 opportunity={opp}
-                onClick={() => console.log("Viewing opportunity:", opp.id)}
+                onClick={() => {}}
               />
             ))}
           </div>

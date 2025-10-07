@@ -94,6 +94,93 @@ export function calculateKellyStake(
 }
 
 /**
+ * Calculate fair market price (true odds) for an outcome by aggregating all bookmaker odds
+ * Uses the average of implied probabilities across all bookmakers
+ * 
+ * @param oddsArray - Array of odds from different bookmakers for the same outcome
+ * @param minBookmakers - Minimum number of bookmakers required (default: 3)
+ * @returns Fair probability as a percentage, or null if insufficient data
+ */
+export function calculateFairMarketPrice(
+  oddsArray: number[],
+  minBookmakers: number = 3
+): number | null {
+  if (oddsArray.length < minBookmakers) {
+    return null;
+  }
+
+  // Calculate implied probability for each bookmaker's odds
+  const impliedProbabilities = oddsArray.map(odds => calculateImpliedProbability(odds));
+  
+  // Average the implied probabilities to get fair probability
+  const fairProbability = impliedProbabilities.reduce((sum, prob) => sum + prob, 0) / impliedProbabilities.length;
+  
+  return Math.round(fairProbability * 100) / 100;
+}
+
+/**
+ * Calculate Expected Value (EV) for a bet
+ * 
+ * Formula: EV% = ((fairProb - impliedProb) / impliedProb) * 100
+ * Or equivalently: EV% = (odds * fairProb - 1) * 100
+ * 
+ * When odds are BETTER than fair (higher odds = lower implied prob), EV is POSITIVE
+ * When odds are WORSE than fair (lower odds = higher implied prob), EV is NEGATIVE
+ * 
+ * @param bookmakerOdds - The odds offered by a specific bookmaker
+ * @param fairProbability - The fair market probability (as percentage)
+ * @param stake - The stake amount for calculating EV in dollars
+ * @returns Object with EV percentage and EV in dollars
+ */
+export function calculateExpectedValue(
+  bookmakerOdds: number,
+  fairProbability: number,
+  stake: number = 100
+): { evPercentage: number; evDollars: number } {
+  // Convert fair probability from percentage to decimal
+  const fairProb = fairProbability / 100;
+  
+  // Calculate implied probability from bookmaker odds
+  const impliedProb = 1 / bookmakerOdds;
+  
+  // Calculate EV percentage using the correct formula
+  // EV% = ((fairProb - impliedProb) / impliedProb) * 100
+  // Which is equivalent to: (odds * fairProb - 1) * 100
+  const evPercentage = ((fairProb - impliedProb) / impliedProb) * 100;
+  
+  // Calculate EV in dollars
+  const evDollars = stake * (evPercentage / 100);
+  
+  return {
+    evPercentage: Math.round(evPercentage * 100) / 100,
+    evDollars: Math.round(evDollars * 100) / 100,
+  };
+}
+
+/**
+ * Get all odds for a specific outcome across all bookmakers
+ */
+function getAllOddsForOutcome(
+  event: OddsApiEvent,
+  outcome: string,
+  marketKey: string
+): number[] {
+  const odds: number[] = [];
+  
+  for (const bookmaker of event.bookmakers) {
+    const market = bookmaker.markets.find(m => m.key === marketKey);
+    if (!market) continue;
+    
+    const outcomeData = market.outcomes.find(o => o.name === outcome);
+    if (outcomeData) {
+      odds.push(outcomeData.price);
+    }
+  }
+  
+  return odds;
+}
+
+/**
  * Find best arbitrage opportunities from odds data for a single event
  */
 export function findBestArbitrage(
@@ -135,17 +222,38 @@ export function findBestArbitrage(
   
   if (!arbitrageCalc.hasArbitrage) return null;
 
-  // Build arbitrage opportunity
+  // Calculate fair market prices for each outcome
+  const fairPrices = outcomes.map(outcome => {
+    const allOdds = getAllOddsForOutcome(event, outcome, marketKey);
+    return calculateFairMarketPrice(allOdds);
+  });
+
+  // Build arbitrage opportunity with EV calculations
   const opportunity: ArbitrageOpportunity = {
     id: `${event.id}-${marketKey}-${Date.now()}`,
     sport: event.sport_title,
     match: `${event.home_team} vs ${event.away_team}`,
-    bookmakers: bestOddsPerOutcome.map((bet, idx) => ({
-      name: bet.bookmaker,
-      outcome: bet.outcome,
-      odds: bet.odds,
-      stake: arbitrageCalc.stakes[idx],
-    })),
+    bookmakers: bestOddsPerOutcome.map((bet, idx) => {
+      const fairPrice = fairPrices[idx];
+      let ev: number | undefined;
+      let evDollars: number | undefined;
+
+      // Calculate EV if we have a fair price (requires minimum 3 bookmakers)
+      if (fairPrice !== null) {
+        const evCalc = calculateExpectedValue(bet.odds, fairPrice, arbitrageCalc.stakes[idx]);
+        ev = evCalc.evPercentage;
+        evDollars = evCalc.evDollars;
+      }
+
+      return {
+        name: bet.bookmaker,
+        outcome: bet.outcome,
+        odds: bet.odds,
+        stake: arbitrageCalc.stakes[idx],
+        ev,
+        evDollars,
+      };
+    }),
     profit: arbitrageCalc.profitPercentage,
     timestamp: new Date().toISOString(),
     eventId: event.id,
@@ -174,6 +282,109 @@ export function findAllArbitrageOpportunities(
 
   // Sort by profit percentage (highest first)
   return opportunities.sort((a, b) => b.profit - a.profit);
+}
+
+/**
+ * Find positive Expected Value (+EV) opportunities from multiple events
+ * Returns bets where the bookmaker odds offer better value than the fair market price
+ * 
+ * @param events - Array of events to analyze
+ * @param minEVPercentage - Minimum EV percentage to filter (default: 0)
+ * @returns Array of arbitrage opportunities with positive EV bets
+ */
+export function findPositiveEVOpportunities(
+  events: OddsApiEvent[],
+  minEVPercentage: number = 0
+): ArbitrageOpportunity[] {
+  const opportunities: ArbitrageOpportunity[] = [];
+
+  for (const event of events) {
+    const marketKey = "h2h";
+    const market = event.bookmakers[0]?.markets.find(m => m.key === marketKey);
+    if (!market) continue;
+
+    const outcomes = market.outcomes.map(o => o.name);
+
+    // Calculate fair prices for each outcome
+    const fairPrices = outcomes.map(outcome => {
+      const allOdds = getAllOddsForOutcome(event, outcome, marketKey);
+      return calculateFairMarketPrice(allOdds);
+    });
+
+    // Check if we have fair prices for all outcomes (need minimum 3 bookmakers)
+    if (fairPrices.some(fp => fp === null)) continue;
+
+    // Find all bets with positive EV for this event
+    const positiveBets: Array<{
+      bookmaker: string;
+      outcome: string;
+      odds: number;
+      ev: number;
+      evDollars: number;
+    }> = [];
+
+    outcomes.forEach((outcome, outcomeIdx) => {
+      const fairPrice = fairPrices[outcomeIdx];
+      if (fairPrice === null) return;
+
+      // Check each bookmaker's odds for this outcome
+      for (const bookmaker of event.bookmakers) {
+        const market = bookmaker.markets.find(m => m.key === marketKey);
+        if (!market) continue;
+
+        const outcomeData = market.outcomes.find(o => o.name === outcome);
+        if (!outcomeData) continue;
+
+        // Calculate EV for this bet
+        const defaultStake = 100; // Use a default stake for EV calculation
+        const evCalc = calculateExpectedValue(outcomeData.price, fairPrice, defaultStake);
+
+        // If EV is positive and meets minimum threshold, add it
+        if (evCalc.evPercentage >= minEVPercentage) {
+          positiveBets.push({
+            bookmaker: bookmaker.title,
+            outcome: outcome,
+            odds: outcomeData.price,
+            ev: evCalc.evPercentage,
+            evDollars: evCalc.evDollars,
+          });
+        }
+      }
+    });
+
+    // Create opportunities from positive EV bets
+    if (positiveBets.length > 0) {
+      // Sort bets by EV percentage (highest first) and take the best ones
+      positiveBets.sort((a, b) => b.ev - a.ev);
+
+      const opportunity: ArbitrageOpportunity = {
+        id: `${event.id}-${marketKey}-ev-${Date.now()}`,
+        sport: event.sport_title,
+        match: `${event.home_team} vs ${event.away_team}`,
+        bookmakers: positiveBets.map(bet => ({
+          name: bet.bookmaker,
+          outcome: bet.outcome,
+          odds: bet.odds,
+          stake: 100, // Default stake
+          ev: bet.ev,
+          evDollars: bet.evDollars,
+        })),
+        profit: 0, // +EV bets don't have guaranteed profit like arbitrage
+        timestamp: new Date().toISOString(),
+        eventId: event.id,
+        commenceTime: event.commence_time,
+      };
+
+      opportunities.push(opportunity);
+    }
+  }
+
+  // Sort by highest EV percentage
+  return opportunities.sort((a, b) => {
+    const maxEVA = Math.max(...a.bookmakers.map(bm => bm.ev || 0));
+    const maxEVB = Math.max(...b.bookmakers.map(bm => bm.ev || 0));
+    return maxEVB - maxEVA;
+  });
 }
 
 /**

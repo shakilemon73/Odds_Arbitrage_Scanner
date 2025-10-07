@@ -1,6 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { 
+  X, 
+  Trophy, 
+  Circle, 
+  Dribbble, 
+  Target, 
+  CircleDot,
+  Shield,
+  Snowflake,
+  Swords
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -11,25 +21,25 @@ import {
 import { Slider } from "@/components/ui/slider";
 
 const SPORTS = [
-  { value: "all", label: "All Sports", icon: "sports" },
-  { value: "soccer", label: "Soccer", icon: "sports_soccer" },
-  { value: "basketball", label: "Basketball", icon: "sports_basketball" },
-  { value: "tennis", label: "Tennis", icon: "sports_tennis" },
+  { value: "all", label: "All Sports", Icon: Trophy },
+  { value: "soccer", label: "Soccer", Icon: Circle },
+  { value: "basketball", label: "Basketball", Icon: Dribbble },
+  { value: "football", label: "Football", Icon: Shield },
+  { value: "baseball", label: "Baseball", Icon: CircleDot },
+  { value: "hockey", label: "Hockey", Icon: Snowflake },
+  { value: "mma", label: "MMA", Icon: Swords },
 ];
 
-const BOOKMAKERS = [
-  "Bet365",
-  "DraftKings",
-  "FanDuel",
-  "BetMGM",
-  "Caesars",
-  "PointsBet",
-];
+export interface BookmakerWithCount {
+  name: string;
+  count: number;
+}
 
 interface FilterBarProps {
   selectedSport: string;
   selectedBookmakers: string[];
   minProfit: number;
+  availableBookmakers: BookmakerWithCount[];
   onSportChange: (sport: string) => void;
   onBookmakerToggle: (bookmaker: string) => void;
   onMinProfitChange: (profit: number) => void;
@@ -40,6 +50,7 @@ export default function FilterBar({
   selectedSport,
   selectedBookmakers,
   minProfit,
+  availableBookmakers = [],
   onSportChange,
   onBookmakerToggle,
   onMinProfitChange,
@@ -60,7 +71,7 @@ export default function FilterBar({
                 {SPORTS.map((sport) => (
                   <SelectItem key={sport.value} value={sport.value}>
                     <div className="flex items-center gap-2">
-                      <span className="material-icons text-base">{sport.icon}</span>
+                      <sport.Icon className="h-4 w-4" />
                       {sport.label}
                     </div>
                   </SelectItem>
@@ -69,15 +80,15 @@ export default function FilterBar({
             </Select>
 
             <div className="flex flex-wrap gap-2">
-              {BOOKMAKERS.map((bookmaker) => (
+              {availableBookmakers.map((bookmaker) => (
                 <Badge
-                  key={bookmaker}
-                  variant={selectedBookmakers.includes(bookmaker) ? "default" : "outline"}
+                  key={bookmaker.name}
+                  variant={selectedBookmakers.includes(bookmaker.name) ? "default" : "outline"}
                   className="cursor-pointer hover-elevate"
-                  onClick={() => onBookmakerToggle(bookmaker)}
-                  data-testid={`badge-bookmaker-${bookmaker.toLowerCase()}`}
+                  onClick={() => onBookmakerToggle(bookmaker.name)}
+                  data-testid={`badge-bookmaker-${bookmaker.name.toLowerCase().replace(/\s+/g, '-')}`}
                 >
-                  {bookmaker}
+                  {bookmaker.name} ({bookmaker.count})
                 </Badge>
               ))}
             </div>
