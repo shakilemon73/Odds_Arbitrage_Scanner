@@ -68,6 +68,20 @@ export default function OpportunityDetailsDialog({
   const guaranteedProfit = (activeTotalStake * opportunity.profit) / 100;
   const profitLevel = opportunity.profit >= 3 ? "high" : opportunity.profit >= 1 ? "medium" : "low";
 
+  const profitTextClass =
+    profitLevel === "high"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : profitLevel === "medium"
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-muted-foreground";
+
+  const profitBgClass =
+    profitLevel === "high"
+      ? "bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/30"
+      : profitLevel === "medium"
+        ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/30"
+        : "bg-muted/40 dark:bg-muted/30 border-border/50";
+
   const handleCustomStakeChange = (value: string) => {
     setCustomStake(value);
     setUseCustomStake(value.trim() !== "" && parseFloat(value) > 0);
@@ -129,20 +143,6 @@ export default function OpportunityDetailsDialog({
     const timestamp = new Date(opportunity.timestamp);
     return timestamp.toLocaleString();
   };
-
-  const profitTextClass =
-    profitLevel === "high"
-      ? "text-emerald-600 dark:text-emerald-400"
-      : profitLevel === "medium"
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-muted-foreground";
-
-  const profitBgClass =
-    profitLevel === "high"
-      ? "bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/30"
-      : profitLevel === "medium"
-        ? "bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/30"
-        : "bg-muted/40 dark:bg-muted/30 border-border/50";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

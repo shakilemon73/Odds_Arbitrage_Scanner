@@ -4,6 +4,13 @@
 
 A real-time sports betting arbitrage opportunity scanner that identifies profitable betting scenarios across multiple bookmakers. The application fetches live odds from The Odds API, calculates arbitrage opportunities using sophisticated mathematical algorithms, and presents them in a clean, data-focused interface. Built for speed and clarity, enabling users to identify and act on arbitrage opportunities within seconds.
 
+### Recent Enhancements (October 2025)
+- ✅ Investment Calculator: Interactive calculator in opportunity details dialog for custom stake amounts
+- ✅ Data Source Tracking: Visual badges distinguish between Mock, Live, and Cached data
+- ✅ Settings Controls: Toggle visibility of mock and live data independently
+- ✅ Auto-Refresh Configuration: Adjustable refresh interval (15 seconds to 5 minutes)
+- ✅ Deployment Ready: Configured for Railway and Vercel deployment
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -132,6 +139,11 @@ Preferred communication style: Simple, everyday language.
 - `ODDS_API_KEY` for The Odds API integration
 - `MOCK_ODDS` flag for development mode
 - `NODE_ENV` for environment detection
+
+**Deployment Platforms:**
+- **Railway** (Recommended for full-stack): Complete configuration with `railway.json` and `Procfile`
+- **Vercel** (Frontend): Configuration with `vercel.json` for static frontend deployment
+- Full deployment instructions available in `DEPLOYMENT.md`
 
 **Docker Support:**
 - Dockerized containers ready (referenced in spec)
