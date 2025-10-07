@@ -108,11 +108,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[API] Fetching odds for sports:`, uniqueSports);
       
       // Fetch odds from provider
-      const oddsData = await provider.fetchOdds(uniqueSports);
+      const oddsResult = await provider.fetchOdds(uniqueSports);
       
       // Calculate arbitrage opportunities
       const opportunities = findAllArbitrageOpportunities(
-        oddsData,
+        oddsResult.events,
         validated.minProfit || 0
       );
 
@@ -131,6 +131,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         opportunities: filteredOpportunities,
         count: filteredOpportunities.length,
         cachedAt: new Date().toISOString(),
+        isFromCache: oddsResult.isFromCache,
+        cacheAge: oddsResult.cacheAge,
       };
 
       res.json(response);

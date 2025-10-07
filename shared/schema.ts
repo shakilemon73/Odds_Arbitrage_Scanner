@@ -120,6 +120,8 @@ export const getOddsResponseSchema = z.object({
   opportunities: z.array(arbitrageOpportunitySchema),
   count: z.number(),
   cachedAt: z.string().optional(),
+  isFromCache: z.boolean().optional(),
+  cacheAge: z.number().optional(), // Age in minutes
 });
 
 export type GetOddsResponse = z.infer<typeof getOddsResponseSchema>;

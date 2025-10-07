@@ -6,8 +6,14 @@ import { z } from "zod";
 // ODDS PROVIDER INTERFACE & IMPLEMENTATIONS
 // ============================================================================
 
+export interface OddsResult {
+  events: OddsApiEvent[];
+  isFromCache: boolean;
+  cacheAge?: number; // Age in minutes
+}
+
 export interface OddsProvider {
-  fetchOdds(sports: Sport[], regions?: string[], markets?: string[]): Promise<OddsApiEvent[]>;
+  fetchOdds(sports: Sport[], regions?: string[], markets?: string[]): Promise<OddsResult>;
   getName(): string;
 }
 
@@ -21,14 +27,28 @@ interface CacheEntry<T> {
   ttl: number;
 }
 
+interface PersistentCacheEntry<T> {
+  data: T;
+  timestamp: number;
+  isFallback: boolean;
+}
+
 class InMemoryCache {
   private cache: Map<string, CacheEntry<any>> = new Map();
+  private persistentCache: Map<string, PersistentCacheEntry<any>> = new Map();
 
   set<T>(key: string, data: T, ttlSeconds: number = 60): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
       ttl: ttlSeconds * 1000,
+    });
+    
+    // Also save to persistent cache for fallback
+    this.persistentCache.set(key, {
+      data,
+      timestamp: Date.now(),
+      isFallback: false,
     });
   }
 
@@ -47,12 +67,31 @@ class InMemoryCache {
     return entry.data as T;
   }
 
+  getFallback<T>(key: string): { data: T; timestamp: number } | null {
+    const entry = this.persistentCache.get(key);
+    if (!entry) return null;
+    
+    return {
+      data: entry.data as T,
+      timestamp: entry.timestamp,
+    };
+  }
+
   has(key: string): boolean {
     return this.get(key) !== null;
   }
 
+  hasFallback(key: string): boolean {
+    return this.persistentCache.has(key);
+  }
+
   clear(): void {
     this.cache.clear();
+  }
+
+  clearAll(): void {
+    this.cache.clear();
+    this.persistentCache.clear();
   }
 
   getStats() {
@@ -70,6 +109,7 @@ class InMemoryCache {
       totalEntries,
       activeEntries: totalEntries - expiredEntries,
       expiredEntries,
+      persistentEntries: this.persistentCache.size,
     };
   }
 }
@@ -102,14 +142,18 @@ export class TheOddsApiProvider implements OddsProvider {
     sports: Sport[],
     regions: string[] = ["us", "uk", "eu"],
     markets: string[] = ["h2h"]
-  ): Promise<OddsApiEvent[]> {
+  ): Promise<OddsResult> {
     const cacheKey = this.getCacheKey(sports, regions, markets);
     
     // Check cache first
     const cached = oddsCache.get<OddsApiEvent[]>(cacheKey);
     if (cached) {
       console.log(`[OddsAPI] Cache hit for key: ${cacheKey}`);
-      return cached;
+      return {
+        events: cached,
+        isFromCache: false, // This is fresh cache, not fallback
+        cacheAge: 0,
+      };
     }
 
     console.log(`[OddsAPI] Fetching fresh data for sports: ${sports.join(', ')}`);
@@ -125,14 +169,31 @@ export class TheOddsApiProvider implements OddsProvider {
       // Validate with Zod
       const validatedEvents = z.array(oddsApiEventSchema).parse(allEvents);
       
-      // Cache the results
+      // Cache the results (both TTL and persistent)
       oddsCache.set(cacheKey, validatedEvents, this.cacheTtl);
       
       console.log(`[OddsAPI] Fetched ${validatedEvents.length} events, cached for ${this.cacheTtl}s`);
       
-      return validatedEvents;
+      return {
+        events: validatedEvents,
+        isFromCache: false,
+        cacheAge: 0,
+      };
     } catch (error) {
       console.error("[OddsAPI] Error fetching odds:", error);
+      
+      // Try to fall back to cached data
+      const fallback = oddsCache.getFallback<OddsApiEvent[]>(cacheKey);
+      if (fallback) {
+        const ageMinutes = Math.floor((Date.now() - fallback.timestamp) / 60000);
+        console.log(`[OddsAPI] Using cached fallback data (${ageMinutes}m old)`);
+        return {
+          events: fallback.data,
+          isFromCache: true,
+          cacheAge: ageMinutes,
+        };
+      }
+      
       throw new Error(`Failed to fetch odds: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -171,7 +232,7 @@ export class MockOddsProvider implements OddsProvider {
     return "Mock Provider";
   }
 
-  async fetchOdds(sports: Sport[]): Promise<OddsApiEvent[]> {
+  async fetchOdds(sports: Sport[]): Promise<OddsResult> {
     console.log(`[MockProvider] Generating mock data for sports: ${sports.join(', ')}`);
     
     const mockEvents: OddsApiEvent[] = [
@@ -358,11 +419,16 @@ export class MockOddsProvider implements OddsProvider {
     ];
 
     // Filter by requested sports if specific ones are requested
+    let filteredEvents = mockEvents;
     if (sports.length > 0 && !sports.includes("soccer_epl" as Sport)) {
-      return mockEvents.filter(event => sports.includes(event.sport_key as Sport));
+      filteredEvents = mockEvents.filter(event => sports.includes(event.sport_key as Sport));
     }
 
-    return mockEvents;
+    return {
+      events: filteredEvents,
+      isFromCache: false,
+      cacheAge: 0,
+    };
   }
 }
 
