@@ -53,7 +53,13 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
       localStorage.setItem("mockMode", mockMode.toString());
       
       // Invalidate all odds queries to force immediate refetch with new settings
-      await queryClient.invalidateQueries({ queryKey: ['/api/odds'] });
+      // Use predicate to match any query key that starts with /api/odds
+      await queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/odds');
+        }
+      });
       
       setIsSaving(false);
       onOpenChange(false);
