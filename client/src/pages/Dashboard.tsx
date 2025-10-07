@@ -1,86 +1,45 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import DashboardHeader from "@/components/DashboardHeader";
 import FilterBar from "@/components/FilterBar";
 import ArbitrageCard, { type ArbitrageOpportunity } from "@/components/ArbitrageCard";
 import EmptyState from "@/components/EmptyState";
 import SettingsDialog from "@/components/SettingsDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// TODO: remove mock functionality
-const MOCK_OPPORTUNITIES: ArbitrageOpportunity[] = [
-  {
-    id: "1",
-    sport: "Soccer",
-    match: "Man City vs Arsenal",
-    bookmakers: [
-      { name: "Bet365", outcome: "Home", odds: 2.10, stake: 476 },
-      { name: "DraftKings", outcome: "Away", odds: 3.50, stake: 286 },
-      { name: "FanDuel", outcome: "Draw", odds: 3.80, stake: 263 },
-    ],
-    profit: 3.2,
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    sport: "Basketball",
-    match: "Lakers vs Warriors",
-    bookmakers: [
-      { name: "BetMGM", outcome: "Home", odds: 1.95, stake: 513 },
-      { name: "Caesars", outcome: "Away", odds: 2.05, stake: 488 },
-    ],
-    profit: 2.1,
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    sport: "Tennis",
-    match: "Djokovic vs Alcaraz",
-    bookmakers: [
-      { name: "PointsBet", outcome: "Player 1", odds: 2.25, stake: 444 },
-      { name: "FanDuel", outcome: "Player 2", odds: 1.85, stake: 541 },
-    ],
-    profit: 1.8,
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: "4",
-    sport: "Soccer",
-    match: "Real Madrid vs Barcelona",
-    bookmakers: [
-      { name: "DraftKings", outcome: "Home", odds: 2.40, stake: 417 },
-      { name: "Bet365", outcome: "Away", odds: 3.00, stake: 333 },
-      { name: "BetMGM", outcome: "Draw", odds: 3.60, stake: 278 },
-    ],
-    profit: 4.5,
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: "5",
-    sport: "Basketball",
-    match: "Celtics vs Heat",
-    bookmakers: [
-      { name: "FanDuel", outcome: "Home", odds: 1.90, stake: 526 },
-      { name: "Caesars", outcome: "Away", odds: 2.15, stake: 465 },
-    ],
-    profit: 1.2,
-    timestamp: new Date().toISOString(),
-  },
-];
+interface GetOddsResponse {
+  opportunities: ArbitrageOpportunity[];
+  count: number;
+  cachedAt?: string;
+}
 
 export default function Dashboard() {
   const [selectedSport, setSelectedSport] = useState("all");
   const [selectedBookmakers, setSelectedBookmakers] = useState<string[]>([]);
   const [minProfit, setMinProfit] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [opportunities] = useState<ArbitrageOpportunity[]>(MOCK_OPPORTUNITIES); // TODO: remove mock functionality
+
+  // Fetch arbitrage opportunities from API
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    refetch,
+    isFetching 
+  } = useQuery<GetOddsResponse>({
+    queryKey: ["/api/odds", { 
+      sports: selectedSport !== "all" ? selectedSport : undefined,
+      minProfit: minProfit > 0 ? minProfit : undefined,
+      bookmakers: selectedBookmakers.length > 0 ? selectedBookmakers.join(',') : undefined,
+    }],
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    staleTime: 15000, // Consider data stale after 15 seconds
+  });
+
+  const opportunities = data?.opportunities || [];
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    console.log("Refreshing data...");
-    setTimeout(() => {
-      setIsRefreshing(false);
-      console.log("Data refreshed");
-    }, 1000);
+    refetch();
   };
 
   const handleBookmakerToggle = (bookmaker: string) => {
@@ -97,30 +56,54 @@ export default function Dashboard() {
     setMinProfit(0);
   };
 
-  // Filter opportunities
-  const filteredOpportunities = opportunities.filter((opp) => {
-    if (selectedSport !== "all" && opp.sport.toLowerCase() !== selectedSport) {
-      return false;
-    }
-    if (selectedBookmakers.length > 0) {
-      const hasBookmaker = opp.bookmakers.some((b) =>
-        selectedBookmakers.includes(b.name)
-      );
-      if (!hasBookmaker) return false;
-    }
-    if (opp.profit < minProfit) {
-      return false;
-    }
-    return true;
-  });
+  // Determine status indicator
+  const getStatus = () => {
+    if (isError) return "disconnected";
+    if (data?.cachedAt) return "cached";
+    return "connected";
+  };
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader
+          status="connected"
+          onRefresh={handleRefresh}
+          onSettingsClick={() => setSettingsOpen(true)}
+          isRefreshing={true}
+        />
+
+        <FilterBar
+          selectedSport={selectedSport}
+          selectedBookmakers={selectedBookmakers}
+          minProfit={minProfit}
+          onSportChange={setSelectedSport}
+          onBookmakerToggle={handleBookmakerToggle}
+          onMinProfitChange={setMinProfit}
+          onClearFilters={handleClearFilters}
+        />
+
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-64 w-full" data-testid={`skeleton-${i}`} />
+            ))}
+          </div>
+        </main>
+
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
-        status="connected"
+        status={getStatus()}
         onRefresh={handleRefresh}
         onSettingsClick={() => setSettingsOpen(true)}
-        isRefreshing={isRefreshing}
+        isRefreshing={isFetching}
       />
 
       <FilterBar
@@ -134,9 +117,22 @@ export default function Dashboard() {
       />
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {filteredOpportunities.length > 0 ? (
+        {isError ? (
+          <div className="text-center py-12">
+            <p className="text-destructive text-lg mb-4" data-testid="text-error">
+              Failed to load arbitrage opportunities
+            </p>
+            <button
+              onClick={handleRefresh}
+              className="text-primary hover:underline"
+              data-testid="button-retry"
+            >
+              Try again
+            </button>
+          </div>
+        ) : opportunities.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredOpportunities.map((opp) => (
+            {opportunities.map((opp) => (
               <ArbitrageCard
                 key={opp.id}
                 opportunity={opp}
