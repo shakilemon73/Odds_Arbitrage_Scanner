@@ -192,7 +192,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-4" role="main">
         {isError ? (
           <div className="text-center py-12" role="alert">
             <div className="rounded-full bg-destructive/10 p-6 mb-6 inline-block">
