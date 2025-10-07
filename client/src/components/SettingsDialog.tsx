@@ -23,6 +23,14 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [showApiKey, setShowApiKey] = useState(false);
   const [mockMode, setMockMode] = useState(() => localStorage.getItem("mockMode") === "true");
 
+  // Auto-disable mock mode when API key is entered
+  const handleApiKeyChange = (value: string) => {
+    setApiKey(value);
+    if (value.trim().length > 0 && mockMode) {
+      setMockMode(false);
+    }
+  };
+
   const handleSave = async () => {
     // Save to localStorage
     localStorage.setItem("oddsApiKey", apiKey);
@@ -65,7 +73,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
                 type={showApiKey ? "text" : "password"}
                 placeholder="Enter your API key"
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={(e) => handleApiKeyChange(e.target.value)}
                 className="pr-10"
                 data-testid="input-api-key"
               />
@@ -101,7 +109,11 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
             <div className="space-y-0.5">
               <Label htmlFor="mock-mode">Mock Data Mode</Label>
               <p className="text-xs text-muted-foreground">
-                Use simulated data for testing without API calls
+                {mockMode 
+                  ? "Using simulated data (no API key needed)"
+                  : apiKey.trim()
+                    ? "Using live data from The Odds API"
+                    : "Enter an API key to use live data"}
               </p>
             </div>
             <Switch
