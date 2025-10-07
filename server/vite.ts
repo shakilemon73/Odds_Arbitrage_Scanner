@@ -17,8 +17,9 @@ export function log(message: string, source = "express") {
 export async function setupVite(app: Express, server: Server) {
   // Dynamically import vite and related modules only in development
   const { createServer: createViteServer, createLogger } = await import("vite");
-  const viteConfig = (await import("../vite.config.js")).default;
   const { nanoid } = await import("nanoid");
+  const react = (await import("@vitejs/plugin-react")).default;
+  const runtimeErrorOverlay = (await import("@replit/vite-plugin-runtime-error-modal")).default;
   
   const viteLogger = createLogger();
   
@@ -29,7 +30,32 @@ export async function setupVite(app: Express, server: Server) {
   };
 
   const vite = await createViteServer({
-    ...viteConfig,
+    plugins: [
+      react(),
+      runtimeErrorOverlay(),
+      ...(process.env.REPL_ID !== undefined
+        ? [
+            await import("@replit/vite-plugin-cartographer").then((m) =>
+              m.cartographer(),
+            ),
+            await import("@replit/vite-plugin-dev-banner").then((m) =>
+              m.devBanner(),
+            ),
+          ]
+        : []),
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "..", "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "..", "shared"),
+        "@assets": path.resolve(import.meta.dirname, "..", "attached_assets"),
+      },
+    },
+    root: path.resolve(import.meta.dirname, "..", "client"),
+    build: {
+      outDir: path.resolve(import.meta.dirname, "..", "dist/public"),
+      emptyOutDir: true,
+    },
     configFile: false,
     customLogger: {
       ...viteLogger,
