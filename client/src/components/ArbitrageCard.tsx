@@ -129,21 +129,21 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         aria-hidden="true"
       />
 
-      <CardHeader className="relative pb-6 space-y-5">
+      <CardHeader className="relative pb-4 space-y-4">
         {/* Header Section */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className={cn(
-              "mt-1 p-2 rounded-lg shrink-0 transition-all duration-200",
+              "mt-0.5 p-1.5 rounded-lg shrink-0 transition-all duration-200",
               "bg-primary/10 dark:bg-primary/15 group-hover:bg-primary/20 dark:group-hover:bg-primary/25"
             )}>
-              <SportIcon className="h-5 w-5 text-primary" aria-hidden="true" />
+              <SportIcon className="h-4 w-4 text-primary" aria-hidden="true" />
             </div>
-            <div className="flex-1 min-w-0 space-y-2">
-              <h3 className="font-bold text-lg leading-tight" data-testid="text-match">
+            <div className="flex-1 min-w-0 space-y-1">
+              <h3 className="font-bold text-base leading-tight" data-testid="text-match">
                 {opportunity.match}
               </h3>
-              <p className="text-sm text-muted-foreground font-medium">{opportunity.sport}</p>
+              <p className="text-xs text-muted-foreground font-medium">{opportunity.sport}</p>
             </div>
           </div>
 
@@ -158,34 +158,34 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         {/* Profit Display - Hero Section */}
         <div 
           className={cn(
-            "rounded-xl border-2 p-6 backdrop-blur-sm transition-all duration-200",
-            "group-hover:scale-[1.02]",
+            "rounded-xl border-2 p-4 backdrop-blur-sm transition-all duration-200",
+            "group-hover:scale-[1.01]",
             profitBgClass
           )}
         >
-          <div className="flex items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Zap className={cn("h-5 w-5", profitIconClass)} aria-hidden="true" />
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Zap className={cn("h-4 w-4", profitIconClass)} aria-hidden="true" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Guaranteed Return
                 </span>
               </div>
-              <div className="flex items-baseline gap-3">
-                <div className={cn("text-5xl font-black font-mono tabular-nums tracking-tight", profitTextClass)} data-testid="badge-profit">
+              <div className="flex items-baseline gap-2">
+                <div className={cn("text-4xl font-black font-mono tabular-nums tracking-tight", profitTextClass)} data-testid="badge-profit">
                   {opportunity.profit.toFixed(2)}%
                 </div>
-                <TrendingUp className={cn("h-6 w-6 mb-2", profitIconClass)} aria-hidden="true" />
+                <TrendingUp className={cn("h-5 w-5 mb-1", profitIconClass)} aria-hidden="true" />
               </div>
             </div>
-            <div className="text-right space-y-2">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <div className="text-right space-y-1.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Profit Amount
               </div>
-              <div className={cn("text-3xl font-bold font-mono tabular-nums", profitTextClass)}>
+              <div className={cn("text-2xl font-bold font-mono tabular-nums", profitTextClass)}>
                 ${guaranteedProfit.toFixed(2)}
               </div>
-              <div className="text-xs text-muted-foreground font-medium">
+              <div className="text-[10px] text-muted-foreground font-medium">
                 on ${totalStake.toFixed(2)}
               </div>
             </div>
@@ -193,48 +193,48 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         </div>
       </CardHeader>
 
-      <CardContent className="relative pb-6 space-y-5">
+      <CardContent className="relative pb-5 space-y-4">
         {/* Bookmakers Section */}
         <div className="space-y-3" role="list" aria-label="Bookmaker odds">
           {opportunity.bookmakers.map((bookie, idx) => (
             <div
               key={idx}
               className={cn(
-                "relative overflow-hidden rounded-xl p-4 transition-all duration-200",
+                "relative overflow-hidden rounded-lg p-3 transition-all duration-200",
                 "bg-card dark:bg-muted/20 border border-card-border",
                 "hover:bg-muted/30 dark:hover:bg-muted/30"
               )}
               role="listitem"
               data-testid={`bookmaker-${idx}`}
             >
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" aria-hidden="true" />
-                    <span className="font-bold text-base">{bookie.name}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" aria-hidden="true" />
+                    <span className="font-bold text-sm">{bookie.name}</span>
                   </div>
                   <Badge 
                     variant="secondary" 
-                    className="text-xs font-semibold px-3 py-1"
+                    className="text-[10px] font-semibold px-2 py-0.5"
                   >
                     {bookie.outcome}
                   </Badge>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                       Odds
                     </div>
-                    <div className="text-2xl font-bold font-mono tabular-nums" data-testid={`odds-${idx}`}>
+                    <div className="text-xl font-bold font-mono tabular-nums" data-testid={`odds-${idx}`}>
                       {bookie.odds.toFixed(2)}
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                       Stake Required
                     </div>
-                    <div className="text-2xl font-bold font-mono tabular-nums" data-testid={`stake-${idx}`}>
+                    <div className="text-xl font-bold font-mono tabular-nums" data-testid={`stake-${idx}`}>
                       ${bookie.stake.toFixed(2)}
                     </div>
                   </div>
@@ -245,12 +245,12 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         </div>
 
         {/* Action Section */}
-        <div className="pt-4 border-t border-border/50 space-y-4">
+        <div className="pt-3 border-t border-border/50 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
               Total Investment
             </span>
-            <span className="text-xl font-black font-mono tabular-nums">
+            <span className="text-lg font-black font-mono tabular-nums">
               ${totalStake.toFixed(2)}
             </span>
           </div>
@@ -259,7 +259,7 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
             variant="default"
             size="default"
             className={cn(
-              "w-full gap-2 font-bold text-base h-12",
+              "w-full gap-2 font-bold text-sm h-10",
               "shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
             )}
             data-testid="button-view-details"
@@ -269,9 +269,9 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
             }}
             aria-label="View detailed breakdown and place bets"
           >
-            <DollarSign className="h-5 w-5" />
+            <DollarSign className="h-4 w-4" />
             View Details & Place Bets
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>

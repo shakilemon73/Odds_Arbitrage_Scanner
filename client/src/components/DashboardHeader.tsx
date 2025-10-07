@@ -46,22 +46,22 @@ export default function DashboardHeader({
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" aria-hidden="true" />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="flex h-24 items-center justify-between gap-4">
+        <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
               <div className={cn(
-                "relative bg-gradient-to-br from-primary to-primary/80 p-3 rounded-xl",
+                "relative bg-gradient-to-br from-primary to-primary/80 p-2 rounded-lg",
                 "shadow-lg shadow-primary/20"
               )}>
-                <TrendingUp className="h-7 w-7 text-primary-foreground" aria-hidden="true" />
-                <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-primary-foreground animate-pulse" aria-hidden="true" />
+                <TrendingUp className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+                <Sparkles className="absolute -top-0.5 -right-0.5 h-3 w-3 text-primary-foreground animate-pulse" aria-hidden="true" />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent" data-testid="text-app-title">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent" data-testid="text-app-title">
                   Arbitrage Scanner
                 </h1>
-                <p className="text-sm text-muted-foreground font-medium hidden sm:block">
-                  Find guaranteed profit opportunities in real-time
+                <p className="text-xs text-muted-foreground font-medium hidden sm:block">
+                  Find guaranteed profit opportunities
                 </p>
               </div>
             </div>

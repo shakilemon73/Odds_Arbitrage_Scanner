@@ -8,6 +8,7 @@ import SettingsDialog from "@/components/SettingsDialog";
 import CacheIndicator from "@/components/CacheIndicator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface GetOddsResponse {
   opportunities: ArbitrageOpportunity[];
@@ -134,12 +135,58 @@ export default function Dashboard() {
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5 pointer-events-none" aria-hidden="true" />
+        <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+        
+        <div className="relative">
+          <DashboardHeader
+            status="connected"
+            onRefresh={handleRefresh}
+            onSettingsClick={() => setSettingsOpen(true)}
+            isRefreshing={true}
+          />
+
+          <FilterBar
+            selectedSport={selectedSport}
+            selectedBookmakers={selectedBookmakers}
+            minProfit={minProfit}
+            availableBookmakers={availableBookmakers}
+            onSportChange={setSelectedSport}
+            onBookmakerToggle={handleBookmakerToggle}
+            onMinProfitChange={setMinProfit}
+            onClearFilters={handleClearFilters}
+          />
+
+          <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-80 w-full rounded-xl" data-testid={`skeleton-${i}`} />
+              ))}
+            </div>
+          </main>
+
+          <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5 pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
+      <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
+      
+      <div className="relative">
         <DashboardHeader
-          status="connected"
+          status={getStatus()}
           onRefresh={handleRefresh}
           onSettingsClick={() => setSettingsOpen(true)}
-          isRefreshing={true}
+          isRefreshing={isFetching}
         />
 
         <FilterBar
@@ -153,87 +200,60 @@ export default function Dashboard() {
           onClearFilters={handleClearFilters}
         />
 
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-64 w-full" data-testid={`skeleton-${i}`} />
-            ))}
+        {data?.isFromCache && (
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
+            <CacheIndicator isFromCache={data.isFromCache} cacheAge={data.cacheAge} />
           </div>
+        )}
+
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
+          {isError ? (
+            <div className="text-center py-16" role="alert">
+              <div className={cn(
+                "rounded-2xl p-8 mb-6 inline-block",
+                "bg-destructive/10 dark:bg-destructive/15 backdrop-blur-sm",
+                "border border-destructive/20"
+              )}>
+                <svg className="h-16 w-16 text-destructive mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold mb-3">Connection Error</h2>
+              <p className="text-muted-foreground text-base mb-8 max-w-md mx-auto" data-testid="text-error">
+                Unable to load arbitrage opportunities. Please check your connection and try again.
+              </p>
+              <Button
+                onClick={handleRefresh}
+                variant="default"
+                size="lg"
+                data-testid="button-retry"
+                className="gap-2 font-bold shadow-lg shadow-primary/20"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : opportunities.length > 0 ? (
+            <div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              role="feed"
+              aria-label="Arbitrage opportunities"
+              aria-busy={isFetching}
+            >
+              {opportunities.map((opp) => (
+                <ArbitrageCard
+                  key={opp.id}
+                  opportunity={opp}
+                  onClick={() => {}}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState onRefresh={handleRefresh} />
+          )}
         </main>
 
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        status={getStatus()}
-        onRefresh={handleRefresh}
-        onSettingsClick={() => setSettingsOpen(true)}
-        isRefreshing={isFetching}
-      />
-
-      <FilterBar
-        selectedSport={selectedSport}
-        selectedBookmakers={selectedBookmakers}
-        minProfit={minProfit}
-        availableBookmakers={availableBookmakers}
-        onSportChange={setSelectedSport}
-        onBookmakerToggle={handleBookmakerToggle}
-        onMinProfitChange={setMinProfit}
-        onClearFilters={handleClearFilters}
-      />
-
-      {data?.isFromCache && (
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0">
-          <CacheIndicator isFromCache={data.isFromCache} cacheAge={data.cacheAge} />
-        </div>
-      )}
-
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-4" role="main">
-        {isError ? (
-          <div className="text-center py-12" role="alert">
-            <div className="rounded-full bg-destructive/10 p-6 mb-6 inline-block">
-              <svg className="h-12 w-12 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-semibold mb-2">Connection Error</h2>
-            <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto" data-testid="text-error">
-              Unable to load opportunities
-            </p>
-            <Button
-              onClick={handleRefresh}
-              variant="default"
-              data-testid="button-retry"
-              className="h-11 px-6"
-            >
-              Try Again
-            </Button>
-          </div>
-        ) : opportunities.length > 0 ? (
-          <div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            role="feed"
-            aria-label="Arbitrage opportunities"
-            aria-busy={isFetching}
-          >
-            {opportunities.map((opp) => (
-              <ArbitrageCard
-                key={opp.id}
-                opportunity={opp}
-                onClick={() => {}}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState onRefresh={handleRefresh} />
-        )}
-      </main>
-
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

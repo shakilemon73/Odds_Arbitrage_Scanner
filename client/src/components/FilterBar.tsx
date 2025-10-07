@@ -64,25 +64,25 @@ export default function FilterBar({
 
   return (
     <div className="border-b border-border/50 bg-muted/30 dark:bg-muted/10" role="region" aria-label="Filters">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <Card className={cn(
-          "p-6 space-y-6 border-border/50",
+          "p-5 space-y-5 border-border/50",
           "bg-card/50 backdrop-blur-sm"
         )}>
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className={cn(
-                "bg-gradient-to-br from-primary/20 to-primary/10 p-2.5 rounded-xl",
+                "bg-gradient-to-br from-primary/20 to-primary/10 p-2 rounded-lg",
                 "ring-1 ring-primary/20"
               )}>
-                <Filter className="h-5 w-5 text-primary" aria-hidden="true" />
+                <Filter className="h-4 w-4 text-primary" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-lg font-bold flex items-center gap-2">
+                <h2 className="text-base font-bold flex items-center gap-2">
                   Filter Opportunities
-                  {hasFilters && <Sparkles className="h-4 w-4 text-primary animate-pulse" aria-hidden="true" />}
+                  {hasFilters && <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" aria-hidden="true" />}
                 </h2>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs text-muted-foreground font-medium">
                   Refine your search to find the best opportunities
                 </p>
               </div>
@@ -105,10 +105,10 @@ export default function FilterBar({
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Sport Category */}
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
                 <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
                 Sport Category
               </label>
@@ -137,9 +137,9 @@ export default function FilterBar({
             </div>
 
             {/* Minimum Profit */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="profit-slider" className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+                <label htmlFor="profit-slider" className="text-xs font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
                   <TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />
                   Min Profit
                 </label>
@@ -172,8 +172,8 @@ export default function FilterBar({
             </div>
 
             {/* Bookmakers Info */}
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground flex items-center gap-2 uppercase tracking-wide">
                 <CircleDot className="h-4 w-4 text-primary" aria-hidden="true" />
                 Bookmakers
               </label>
@@ -181,7 +181,7 @@ export default function FilterBar({
                 "flex items-center justify-center h-11 px-4 rounded-lg",
                 "bg-muted/50 border border-border/50"
               )}>
-                <span className="text-sm font-semibold text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground">
                   {selectedBookmakers.length > 0 
                     ? `${selectedBookmakers.length} of ${availableBookmakers.length} selected` 
                     : `All ${availableBookmakers.length} available`}
@@ -192,7 +192,7 @@ export default function FilterBar({
 
           {/* Bookmakers Grid */}
           {availableBookmakers.length > 0 && (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2 pt-1">
               <div className="flex flex-wrap gap-2" role="group" aria-label="Bookmaker filters">
                 {availableBookmakers.map((bookmaker) => {
                   const isSelected = selectedBookmakers.includes(bookmaker.name);
@@ -201,7 +201,7 @@ export default function FilterBar({
                       key={bookmaker.name}
                       variant={isSelected ? "default" : "outline"}
                       className={cn(
-                        "cursor-pointer transition-all duration-200 px-4 py-2.5 text-sm font-bold",
+                        "cursor-pointer transition-all duration-200 px-3 py-1.5 text-xs font-bold",
                         isSelected 
                           ? "shadow-lg shadow-primary/20 ring-1 ring-primary/30" 
                           : "hover-elevate hover:border-primary/30"
