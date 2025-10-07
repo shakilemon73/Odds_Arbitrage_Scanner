@@ -4,14 +4,13 @@ import {
   X, 
   Trophy, 
   Circle, 
-  Dribbble, 
   CircleDot,
   Shield,
   Snowflake,
-  Swords,
   Filter,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  Dumbbell
 } from "lucide-react";
 import {
   Select,
@@ -27,11 +26,11 @@ import { cn } from "@/lib/utils";
 const SPORTS = [
   { value: "all", label: "All Sports", Icon: Trophy },
   { value: "soccer", label: "Soccer", Icon: Circle },
-  { value: "basketball", label: "Basketball", Icon: Dribbble },
+  { value: "basketball", label: "Basketball", Icon: CircleDot },
   { value: "football", label: "Football", Icon: Shield },
-  { value: "baseball", label: "Baseball", Icon: CircleDot },
+  { value: "baseball", label: "Baseball", Icon: Circle },
   { value: "hockey", label: "Hockey", Icon: Snowflake },
-  { value: "mma", label: "MMA", Icon: Swords },
+  { value: "mma", label: "MMA", Icon: Dumbbell },
 ];
 
 export interface BookmakerWithCount {
@@ -121,7 +120,9 @@ export default function FilterBar({
                   data-testid="select-sport" 
                   aria-label="Select sport to filter"
                 >
-                  <SelectValue />
+                  <SelectValue>
+                    {SPORTS.find(s => s.value === selectedSport)?.label || "All Sports"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {SPORTS.map((sport) => (

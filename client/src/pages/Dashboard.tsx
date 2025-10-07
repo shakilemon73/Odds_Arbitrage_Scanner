@@ -137,9 +137,9 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5 pointer-events-none" aria-hidden="true" />
-        <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-background to-primary/3 pointer-events-none" aria-hidden="true" />
+        <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
         
         <div className="relative">
           <DashboardHeader
@@ -177,9 +177,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5 pointer-events-none" aria-hidden="true" />
-      <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
-      <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-background to-primary/3 pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
+      <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
       
       <div className="relative">
         <DashboardHeader

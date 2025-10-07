@@ -6,10 +6,9 @@ import {
   Circle as CircleIcon,
   Trophy,
   Dumbbell,
-  Waves,
+  Snowflake,
   Shield,
-  Award,
-  Target,
+  CircleDot,
   Clock,
   ArrowRight,
   DollarSign,
@@ -41,12 +40,11 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
   
   const getSportIcon = (sport: string) => {
     const sportLower = sport.toLowerCase();
-    if (sportLower.includes('basketball')) return Dumbbell;
+    if (sportLower.includes('basketball')) return CircleDot;
     if (sportLower.includes('soccer') || sportLower.includes('football')) return CircleIcon;
-    if (sportLower.includes('tennis')) return Award;
-    if (sportLower.includes('baseball')) return Target;
-    if (sportLower.includes('hockey')) return Waves;
-    if (sportLower.includes('mma')) return Shield;
+    if (sportLower.includes('baseball')) return CircleIcon;
+    if (sportLower.includes('hockey')) return Snowflake;
+    if (sportLower.includes('mma')) return Dumbbell;
     return Trophy;
   };
 
@@ -195,7 +193,7 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
 
       <CardContent className="relative pb-5 space-y-4">
         {/* Bookmakers Section */}
-        <div className="space-y-3" role="list" aria-label="Bookmaker odds">
+        <div className="space-y-3" aria-label="Bookmaker odds">
           {opportunity.bookmakers.map((bookie, idx) => (
             <div
               key={idx}
@@ -204,7 +202,6 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
                 "bg-card dark:bg-muted/20 border border-card-border",
                 "hover:bg-muted/30 dark:hover:bg-muted/30"
               )}
-              role="listitem"
               data-testid={`bookmaker-${idx}`}
             >
               <div className="space-y-2.5">
