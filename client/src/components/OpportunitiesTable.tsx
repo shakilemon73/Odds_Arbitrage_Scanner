@@ -52,8 +52,8 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
     <div className="rounded-lg sm:rounded-xl border-2 border-border bg-card">
       <div className="overflow-x-auto">
         <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
             <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider h-10 sm:h-12 whitespace-nowrap">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -82,9 +82,9 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
               </div>
             </TableHead>
             <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-right whitespace-nowrap">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
           {opportunities.map((opp) => {
             const totalStake = opp.bookmakers.reduce((sum, b) => sum + b.stake, 0);
             const guaranteedProfit = (totalStake * opp.profit) / 100;
@@ -162,8 +162,8 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
               </TableRow>
             );
           })}
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
