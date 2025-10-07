@@ -45,8 +45,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[API] Fetching odds using ${provider.getName()}`);
       
-      // Default sports if none specified
-      const sports = (validated.sports || ["soccer_epl", "basketball_nba", "tennis_atp"]) as Sport[];
+      // Default to 'upcoming' which returns games across all sports
+      // This is always valid and doesn't require specific sport keys
+      const sports = (validated.sports || ["upcoming"]) as Sport[];
       
       // Fetch odds from provider
       const oddsData = await provider.fetchOdds(sports);
@@ -92,7 +93,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========================================
-  // GET /api/healthz - Health check
+  // GET /healthz - Health check (spec requirement)
+  // ========================================
+  app.get("/healthz", async (req, res) => {
+    try {
+      const cacheStats = oddsCache.getStats();
+      
+      const response: HealthCheckResponse = {
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        services: {
+          api: true,
+          cache: cacheStats.activeEntries >= 0,
+        },
+      };
+
+      res.json(response);
+    } catch (error) {
+      const response: HealthCheckResponse = {
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        services: {
+          api: false,
+          cache: false,
+        },
+      };
+
+      res.status(503).json(response);
+    }
+  });
+
+  // ========================================
+  // GET /api/healthz - Health check (alias)
   // ========================================
   app.get("/api/healthz", async (req, res) => {
     try {

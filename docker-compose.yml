@@ -1,0 +1,59 @@
+# ============================================================================
+# DOCKER COMPOSE CONFIGURATION FOR ODDS ARBITRAGE SCANNER
+# ============================================================================
+# Local development setup with hot-reload
+
+version: '3.8'
+
+services:
+  # Backend service (Express API + Vite dev server)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arb-scanner-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - ODDS_API_KEY=${ODDS_API_KEY:-}
+      - MOCK_ODDS=${MOCK_ODDS:-true}
+      - CACHE_TTL=${CACHE_TTL:-60}
+    volumes:
+      # Mount source code for hot-reload in development
+      - ./server:/app/server
+      - ./client:/app/client
+      - ./shared:/app/shared
+      - /app/node_modules
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend service (optional separate frontend for production)
+  # Uncomment if you want to run frontend separately on port 5173
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.frontend
+  #   container_name: arb-scanner-frontend
+  #   ports:
+  #     - "5173:5173"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - VITE_API_URL=http://localhost:8080
+  #   volumes:
+  #     - ./client:/app/client
+  #     - /app/node_modules
+  #   command: npm run dev:frontend
+  #   depends_on:
+  #     - backend
+
+networks:
+  default:
+    name: arb-scanner-network

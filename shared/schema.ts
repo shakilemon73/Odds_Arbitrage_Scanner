@@ -60,13 +60,26 @@ export type OddsApiBookmaker = z.infer<typeof oddsApiBookmakerSchema>;
 export type OddsApiOutcome = z.infer<typeof oddsApiOutcomeSchema>;
 
 // Sports configuration
+// 'upcoming' is always valid and returns next 8 games + live games across all sports
 export const sportSchema = z.enum([
+  "upcoming",
+  "americanfootball_nfl",
+  "americanfootball_ncaaf",
+  "basketball_nba",
+  "basketball_ncaab",
+  "baseball_mlb",
+  "icehockey_nhl",
   "soccer_epl",
   "soccer_spain_la_liga", 
   "soccer_germany_bundesliga",
-  "basketball_nba",
-  "americanfootball_nfl",
+  "soccer_italy_serie_a",
+  "soccer_france_ligue_one",
+  "soccer_usa_mls",
   "tennis_atp",
+  "tennis_wta",
+  "mma_mixed_martial_arts",
+  "aussierules_afl",
+  "rugbyleague_nrl",
 ]);
 
 export type Sport = z.infer<typeof sportSchema>;

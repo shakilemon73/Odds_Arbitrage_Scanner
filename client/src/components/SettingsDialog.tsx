@@ -23,11 +23,27 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [showApiKey, setShowApiKey] = useState(false);
   const [mockMode, setMockMode] = useState(() => localStorage.getItem("mockMode") === "true");
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Save to localStorage
     localStorage.setItem("oddsApiKey", apiKey);
     localStorage.setItem("mockMode", mockMode.toString());
-    console.log("Settings saved:", { apiKey: apiKey ? "***" : "empty", mockMode });
+    
+    // Save to backend
+    try {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mockMode }),
+      });
+      console.log("Settings saved:", { apiKey: apiKey ? "***" : "empty", mockMode });
+    } catch (error) {
+      console.error("Failed to save settings to backend:", error);
+    }
+    
     onOpenChange(false);
+    
+    // Force a refresh to apply new settings
+    window.location.reload();
   };
 
   return (

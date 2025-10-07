@@ -48,6 +48,25 @@ export default function Dashboard() {
     isFetching 
   } = useQuery<GetOddsResponse>({
     queryKey: [buildQueryUrl()],
+    queryFn: async () => {
+      const apiKey = localStorage.getItem("oddsApiKey") || "";
+      const mockMode = localStorage.getItem("mockMode") === "true";
+      
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      
+      // Send API key in header if available and not in mock mode
+      if (apiKey && !mockMode) {
+        headers["x-api-key"] = apiKey;
+      }
+      
+      const response = await fetch(buildQueryUrl(), { headers });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
     refetchInterval: 30000, // Auto-refresh every 30 seconds
     staleTime: 15000, // Consider data stale after 15 seconds
   });
