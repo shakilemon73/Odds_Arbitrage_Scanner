@@ -35,16 +35,11 @@ RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/shared ./shared
 
-# Expose port 8080 (standard for Docker deployments)
+# Expose port (Fly.io will provide PORT env var, default to 8080)
 EXPOSE 8080
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8080/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Run the application
 CMD ["node", "dist/index.js"]
