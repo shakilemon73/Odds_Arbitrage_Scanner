@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Eye, EyeOff } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -51,8 +52,11 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
       localStorage.setItem("oddsApiKey", apiKey);
       localStorage.setItem("mockMode", mockMode.toString());
       
+      // Invalidate all odds queries to force immediate refetch with new settings
+      await queryClient.invalidateQueries({ queryKey: ['/api/odds'] });
+      
+      setIsSaving(false);
       onOpenChange(false);
-      window.location.reload();
     } catch (error) {
       console.error("Failed to save settings:", error);
       setSaveError("Failed to save. Please try again.");

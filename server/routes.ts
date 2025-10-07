@@ -90,7 +90,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get settings to determine mock mode
       const settings = await storage.getSettings();
-      const apiKey = process.env.ODDS_API_KEY || req.headers['x-api-key'] as string;
+      
+      // Get API key from environment or request header
+      const envApiKey = process.env.ODDS_API_KEY;
+      const headerApiKey = req.headers['x-api-key'] as string | undefined;
+      const apiKey = envApiKey || headerApiKey || undefined;
+      
+      console.log(`[API] API Key source: ${envApiKey ? 'environment' : headerApiKey ? 'header' : 'none'}`);
+      console.log(`[API] Mock mode: ${settings.mockMode}`);
       
       // Create odds provider (mock or real)
       const provider = createOddsProvider(apiKey, settings.mockMode);
