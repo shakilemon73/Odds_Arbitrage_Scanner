@@ -143,6 +143,7 @@ export const settingsSchema = z.object({
   apiKey: z.string().optional(),
   mockMode: z.boolean().default(false),
   cacheTimeout: z.number().min(10).max(300).default(60),
+  autoRefreshInterval: z.number().min(10).max(300).default(30),
   sports: z.array(sportSchema).optional(),
 });
 
