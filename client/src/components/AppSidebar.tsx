@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,22 +20,25 @@ import {
   Dumbbell,
   Settings,
   X,
-  Sparkles
+  Sparkles,
+  ChevronRight,
+  Percent
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { BookmakerWithCount } from "@/components/FilterBar";
 
 const SPORTS = [
-  { value: "all", label: "All Sports", Icon: Trophy },
-  { value: "soccer", label: "Soccer", Icon: Circle },
-  { value: "basketball", label: "Basketball", Icon: CircleDot },
-  { value: "football", label: "Football", Icon: Shield },
-  { value: "baseball", label: "Baseball", Icon: Circle },
-  { value: "hockey", label: "Hockey", Icon: Snowflake },
-  { value: "mma", label: "MMA", Icon: Dumbbell },
+  { value: "all", label: "All Sports", Icon: Trophy, description: "All available sports" },
+  { value: "soccer", label: "Soccer", Icon: Circle, description: "Football matches" },
+  { value: "basketball", label: "Basketball", Icon: CircleDot, description: "NBA & more" },
+  { value: "football", label: "Football", Icon: Shield, description: "NFL & NCAA" },
+  { value: "baseball", label: "Baseball", Icon: Circle, description: "MLB games" },
+  { value: "hockey", label: "Hockey", Icon: Snowflake, description: "NHL matches" },
+  { value: "mma", label: "MMA", Icon: Dumbbell, description: "UFC & more" },
 ];
 
 interface AppSidebarProps {
@@ -63,63 +65,93 @@ export function AppSidebar({
   onSettingsClick,
 }: AppSidebarProps) {
   const hasFilters = selectedSport !== "all" || selectedBookmakers.length > 0 || minProfit > 0;
+  const activeFiltersCount = (selectedSport !== "all" ? 1 : 0) + selectedBookmakers.length + (minProfit > 0 ? 1 : 0);
 
   return (
-    <Sidebar data-testid="sidebar-main">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
+    <Sidebar data-testid="sidebar-main" className="border-r">
+      <SidebarHeader className="border-b border-sidebar-border p-6">
+        <div className="flex items-center gap-4">
           <div className={cn(
-            "relative bg-gradient-to-br from-primary to-primary/80 p-2.5 rounded-lg",
-            "shadow-lg shadow-primary/20"
+            "relative bg-gradient-to-br from-primary to-primary/80 p-3 rounded-xl",
+            "shadow-lg shadow-primary/20 transition-transform hover:scale-105"
           )}>
-            <TrendingUp className="h-5 w-5 text-primary-foreground" />
-            <Sparkles className="absolute -top-0.5 -right-0.5 h-3 w-3 text-primary-foreground animate-pulse" />
+            <TrendingUp className="h-6 w-6 text-primary-foreground" />
+            <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-primary-foreground animate-pulse" />
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-sidebar-foreground" data-testid="text-sidebar-title">
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-sidebar-foreground tracking-tight" data-testid="text-sidebar-title">
               DELLTA
             </h2>
-            <p className="text-xs text-muted-foreground">Arbitrage Scanner</p>
+            <p className="text-sm text-muted-foreground font-medium">Arbitrage Scanner</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-4">
+      <SidebarContent className="px-4 py-6 space-y-8">
+        {/* Sport Category Section */}
         <SidebarGroup>
-          <div className="flex items-center justify-between px-3 pb-2">
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+          <div className="flex items-center justify-between px-2 pb-4">
+            <SidebarGroupLabel className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
+              <Trophy className="h-3.5 w-3.5" />
               Sport Category
             </SidebarGroupLabel>
+            {selectedSport !== "all" && (
+              <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                1
+              </Badge>
+            )}
           </div>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {SPORTS.map((sport) => (
-                <SidebarMenuItem key={sport.value}>
-                  <SidebarMenuButton
-                    onClick={() => onSportChange(sport.value)}
-                    isActive={selectedSport === sport.value}
-                    data-testid={`button-sport-${sport.value}`}
-                    className="gap-3"
-                  >
-                    <sport.Icon className="h-4 w-4" />
-                    <span className="flex-1">{sport.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+            <SidebarMenu className="space-y-1">
+              {SPORTS.map((sport) => {
+                const isActive = selectedSport === sport.value;
+                return (
+                  <SidebarMenuItem key={sport.value}>
+                    <SidebarMenuButton
+                      onClick={() => onSportChange(sport.value)}
+                      isActive={isActive}
+                      data-testid={`button-sport-${sport.value}`}
+                      className={cn(
+                        "gap-3 h-11 px-3 rounded-lg font-medium transition-all",
+                        isActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                      )}
+                      tooltip={sport.description}
+                    >
+                      <sport.Icon className={cn(
+                        "h-4.5 w-4.5 transition-colors",
+                        isActive ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <span className="flex-1 text-sm">{sport.label}</span>
+                      {isActive && <ChevronRight className="h-4 w-4 text-primary" />}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-6">
-          <div className="flex items-center justify-between px-3 pb-3">
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+        <Separator />
+
+        {/* Min Profit Section */}
+        <SidebarGroup>
+          <div className="flex items-center justify-between px-2 pb-4">
+            <SidebarGroupLabel className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
+              <Percent className="h-3.5 w-3.5" />
               Min Profit
             </SidebarGroupLabel>
-            <Badge variant="outline" className="text-xs" data-testid="badge-min-profit">
+            <Badge 
+              variant={minProfit > 0 ? "default" : "outline"} 
+              className={cn(
+                "text-xs h-6 px-2 font-bold tabular-nums",
+                minProfit > 0 && "bg-primary/15 text-primary border-primary/30"
+              )}
+              data-testid="badge-min-profit"
+            >
               {minProfit.toFixed(1)}%
             </Badge>
           </div>
-          <SidebarGroupContent className="px-3">
+          <SidebarGroupContent className="px-2 space-y-4">
             <Slider
               value={[minProfit]}
               onValueChange={(value) => onMinProfitChange(value[0])}
@@ -128,77 +160,98 @@ export function AppSidebar({
               className="w-full"
               data-testid="slider-min-profit"
             />
-            <div className="flex justify-between text-xs text-muted-foreground mt-2">
-              <span>0%</span>
-              <span>5%</span>
-              <span>10%</span>
+            <div className="flex justify-between items-center text-xs text-muted-foreground font-medium px-1">
+              <span className={cn(minProfit === 0 && "text-primary font-semibold")}>0%</span>
+              <span className={cn(minProfit >= 4.5 && minProfit <= 5.5 && "text-primary font-semibold")}>5%</span>
+              <span className={cn(minProfit === 10 && "text-primary font-semibold")}>10%</span>
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Bookmakers Section */}
         {availableBookmakers.length > 0 && (
-          <SidebarGroup className="mt-6">
-            <div className="flex items-center justify-between px-3 pb-3">
-              <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                Bookmakers
-              </SidebarGroupLabel>
-              <Badge variant="outline" className="text-xs">
-                {availableBookmakers.reduce((sum, b) => sum + b.count, 0)}
-              </Badge>
-            </div>
-            <SidebarGroupContent className="px-3">
-              <div className="flex flex-wrap gap-2">
-                {availableBookmakers.map(({ name, count }) => {
-                  const isSelected = selectedBookmakers.includes(name);
-                  return (
-                    <Badge
-                      key={name}
-                      variant={isSelected ? "default" : "outline"}
-                      className={cn(
-                        "cursor-pointer text-xs hover-elevate active-elevate-2",
-                        isSelected && "bg-primary text-primary-foreground"
-                      )}
-                      onClick={() => onBookmakerToggle(name)}
-                      data-testid={`badge-bookmaker-${name.toLowerCase()}`}
-                    >
-                      {name}
-                      <span className="ml-1.5 opacity-70">{count}</span>
+          <>
+            <Separator />
+            <SidebarGroup>
+              <div className="flex items-center justify-between px-2 pb-4">
+                <SidebarGroupLabel className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
+                  <Shield className="h-3.5 w-3.5" />
+                  Bookmakers
+                </SidebarGroupLabel>
+                <div className="flex items-center gap-1.5">
+                  {selectedBookmakers.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                      {selectedBookmakers.length}
                     </Badge>
-                  );
-                })}
+                  )}
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5">
+                    {availableBookmakers.reduce((sum, b) => sum + b.count, 0)}
+                  </Badge>
+                </div>
               </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
+              <SidebarGroupContent className="px-2">
+                <div className="flex flex-wrap gap-2">
+                  {availableBookmakers.map(({ name, count }) => {
+                    const isSelected = selectedBookmakers.includes(name);
+                    return (
+                      <Badge
+                        key={name}
+                        variant={isSelected ? "default" : "outline"}
+                        className={cn(
+                          "cursor-pointer text-xs h-8 px-3 font-medium hover-elevate active-elevate-2 transition-all",
+                          isSelected && "bg-primary text-primary-foreground border-primary shadow-sm"
+                        )}
+                        onClick={() => onBookmakerToggle(name)}
+                        data-testid={`badge-bookmaker-${name.toLowerCase()}`}
+                      >
+                        {name}
+                        <span className={cn(
+                          "ml-1.5 opacity-70 font-semibold",
+                          isSelected && "opacity-90"
+                        )}>
+                          {count}
+                        </span>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
 
+        {/* Clear Filters */}
         {hasFilters && (
-          <SidebarGroup className="mt-6">
-            <SidebarGroupContent className="px-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClearFilters}
-                className="w-full gap-2"
-                data-testid="button-clear-filters"
-              >
-                <X className="h-4 w-4" />
-                Clear All Filters
-              </Button>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <>
+            <Separator />
+            <SidebarGroup>
+              <SidebarGroupContent className="px-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClearFilters}
+                  className="w-full gap-2 h-10 font-medium"
+                  data-testid="button-clear-filters"
+                >
+                  <X className="h-4 w-4" />
+                  Clear {activeFiltersCount} Filter{activeFiltersCount !== 1 ? 's' : ''}
+                </Button>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3">
+      <SidebarFooter className="border-t border-sidebar-border p-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={onSettingsClick}
-          className="w-full gap-2 justify-start"
+          className="w-full gap-3 justify-start h-11 font-medium"
           data-testid="button-sidebar-settings"
         >
-          <Settings className="h-4 w-4" />
-          Settings
+          <Settings className="h-4.5 w-4.5" />
+          Settings & API Keys
         </Button>
       </SidebarFooter>
     </Sidebar>
