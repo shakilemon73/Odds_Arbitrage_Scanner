@@ -1,37 +1,48 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import type { ArbitrageOpportunity, Settings } from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
+// ============================================================================
+// IN-MEMORY STORAGE INTERFACE
+// ============================================================================
+// For arbitrage scanner, we primarily rely on real-time calculations
+// Storage is minimal - just for caching opportunities and settings
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // Settings management
+  getSettings(): Promise<Settings>;
+  updateSettings(settings: Partial<Settings>): Promise<Settings>;
+  
+  // Opportunities cache (optional, mainly for performance)
+  getCachedOpportunities(): Promise<ArbitrageOpportunity[]>;
+  setCachedOpportunities(opportunities: ArbitrageOpportunity[]): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private settings: Settings;
+  private cachedOpportunities: ArbitrageOpportunity[];
 
   constructor() {
-    this.users = new Map();
+    this.settings = {
+      mockMode: process.env.MOCK_ODDS === "true",
+      cacheTimeout: 60,
+    };
+    this.cachedOpportunities = [];
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getSettings(): Promise<Settings> {
+    return { ...this.settings };
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async updateSettings(updates: Partial<Settings>): Promise<Settings> {
+    this.settings = { ...this.settings, ...updates };
+    return this.getSettings();
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getCachedOpportunities(): Promise<ArbitrageOpportunity[]> {
+    return [...this.cachedOpportunities];
+  }
+
+  async setCachedOpportunities(opportunities: ArbitrageOpportunity[]): Promise<void> {
+    this.cachedOpportunities = opportunities;
   }
 }
 

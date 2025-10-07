@@ -59,7 +59,7 @@ class InMemoryCache {
     let totalEntries = 0;
     let expiredEntries = 0;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       totalEntries++;
       if (Date.now() - entry.timestamp > entry.ttl) {
         expiredEntries++;
