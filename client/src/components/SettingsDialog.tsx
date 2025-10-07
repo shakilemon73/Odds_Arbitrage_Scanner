@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Eye, EyeOff } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 
@@ -23,8 +24,32 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("oddsApiKey") || "");
   const [showApiKey, setShowApiKey] = useState(false);
   const [mockMode, setMockMode] = useState(() => localStorage.getItem("mockMode") === "true");
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState(30);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
+  useEffect(() => {
+    if (open) {
+      loadSettings();
+    }
+  }, [open]);
+
+  const loadSettings = async () => {
+    setIsLoadingSettings(true);
+    try {
+      const response = await fetch("/api/settings");
+      if (response.ok) {
+        const settings = await response.json();
+        setAutoRefreshInterval(settings.autoRefreshInterval || 30);
+        setMockMode(settings.mockMode || false);
+      }
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
 
   const handleApiKeyChange = (value: string) => {
     setApiKey(value);
@@ -42,7 +67,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
       const response = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mockMode }),
+        body: JSON.stringify({ 
+          mockMode,
+          autoRefreshInterval 
+        }),
       });
       
       if (!response.ok) {
@@ -74,6 +102,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     setApiKey(localStorage.getItem("oddsApiKey") || "");
     setMockMode(localStorage.getItem("mockMode") === "true");
     setSaveError(null);
+    loadSettings();
     onOpenChange(false);
   };
 
@@ -149,6 +178,29 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
               data-testid="switch-mock-mode"
               aria-label="Toggle mock data mode"
             />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="auto-refresh">Auto-Refresh Interval</Label>
+              <span className="text-sm font-medium text-muted-foreground" data-testid="text-refresh-value">
+                {autoRefreshInterval}s
+              </span>
+            </div>
+            <Slider
+              id="auto-refresh"
+              min={10}
+              max={300}
+              step={10}
+              value={[autoRefreshInterval]}
+              onValueChange={(value) => setAutoRefreshInterval(value[0])}
+              data-testid="slider-auto-refresh"
+              aria-label="Auto-refresh interval in seconds"
+              disabled={isLoadingSettings}
+            />
+            <p className="text-xs text-muted-foreground">
+              How often to automatically refresh odds data (10-300 seconds)
+            </p>
           </div>
 
           {saveError && (
