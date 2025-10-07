@@ -20,15 +20,21 @@ Preferred communication style: Simple, everyday language.
 
 **UI Framework:**
 - Shadcn UI component library built on Radix UI primitives
+- Sidebar layout using Shadcn sidebar primitives for navigation and filters
 - Tailwind CSS for styling with custom design system
-- Material Design principles for data-intensive interfaces
+- Professional dashboard design principles for data-intensive interfaces
 - Custom CSS variables for theming (light/dark mode support)
+- Stats overview cards for key metrics display
+- Dual view modes: Card grid and Table view with toggle
 
 **Design System:**
-- Material Icons for consistent iconography
+- DELLTA-inspired professional dark theme with sidebar layout
+- Lucide React icons for consistent iconography
 - Inter font family for general UI
 - JetBrains Mono for numerical data display (odds, stakes, percentages)
-- Color palette optimized for data visualization with profit indicators using green scales
+- Color palette: Deep dark backgrounds (5-8% lightness) with cyan/turquoise primary (188 95% 55%) and purple accent (268 85% 65%)
+- Bright success green (158 88% 50%) for profit indicators
+- High contrast for enhanced readability
 - Responsive design with mobile-first approach
 
 **State Management:**
@@ -175,8 +181,7 @@ Preferred communication style: Simple, everyday language.
 - PostCSS for processing
 
 **Icon Libraries:**
-- Google Material Icons (via CDN)
-- Lucide React for additional iconography
+- Lucide React for primary iconography (TrendingUp, Settings, LayoutGrid, TableIcon, etc.)
 
 ### Utility Libraries
 
