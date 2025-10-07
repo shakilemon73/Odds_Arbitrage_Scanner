@@ -19,6 +19,26 @@ export default function Dashboard() {
   const [minProfit, setMinProfit] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // Build query parameters
+  const buildQueryUrl = () => {
+    const params = new URLSearchParams();
+    
+    if (selectedSport !== "all") {
+      params.append("sports", selectedSport);
+    }
+    
+    if (minProfit > 0) {
+      params.append("minProfit", minProfit.toString());
+    }
+    
+    if (selectedBookmakers.length > 0) {
+      params.append("bookmakers", selectedBookmakers.join(","));
+    }
+    
+    const queryString = params.toString();
+    return `/api/odds${queryString ? `?${queryString}` : ""}`;
+  };
+
   // Fetch arbitrage opportunities from API
   const { 
     data, 
@@ -27,11 +47,7 @@ export default function Dashboard() {
     refetch,
     isFetching 
   } = useQuery<GetOddsResponse>({
-    queryKey: ["/api/odds", { 
-      sports: selectedSport !== "all" ? selectedSport : undefined,
-      minProfit: minProfit > 0 ? minProfit : undefined,
-      bookmakers: selectedBookmakers.length > 0 ? selectedBookmakers.join(',') : undefined,
-    }],
+    queryKey: [buildQueryUrl()],
     refetchInterval: 30000, // Auto-refresh every 30 seconds
     staleTime: 15000, // Consider data stale after 15 seconds
   });
