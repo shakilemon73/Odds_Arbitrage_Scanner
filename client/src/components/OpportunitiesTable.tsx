@@ -49,8 +49,9 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
   };
 
   return (
-    <div className="rounded-lg sm:rounded-xl border-2 border-border overflow-hidden bg-card">
-      <Table>
+    <div className="rounded-lg sm:rounded-xl border-2 border-border bg-card">
+      <div className="overflow-x-auto">
+        <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
             <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider h-10 sm:h-12 whitespace-nowrap">
@@ -163,6 +164,7 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
           })}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

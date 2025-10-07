@@ -161,7 +161,7 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
           profitBgClass,
           "group-hover:shadow-lg"
         )}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div className="flex flex-col gap-4">
             <div className="space-y-1">
               <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1 sm:gap-1.5">
                 <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -178,20 +178,27 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
               </div>
             </div>
             
-            <div className="text-left sm:text-right space-y-1">
-              <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1 sm:gap-1.5 sm:justify-end">
-                <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                Profit Amount
-              </p>
-              <p className={cn(
-                "text-2xl sm:text-3xl font-bold tabular-nums",
-                profitTextClass
-              )} data-testid="text-profit-amount">
-                ${guaranteedProfit.toFixed(2)}
-              </p>
-              <p className="text-xs text-muted-foreground font-medium">
-                on ${totalStake.toFixed(2)}
-              </p>
+            <div className="flex items-baseline justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1 sm:gap-1.5">
+                  <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Profit
+                </p>
+                <p className={cn(
+                  "text-2xl sm:text-3xl font-bold tabular-nums",
+                  profitTextClass
+                )} data-testid="text-profit-amount">
+                  ${guaranteedProfit.toFixed(2)}
+                </p>
+              </div>
+              <div className="text-right space-y-1">
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold">
+                  Total Stake
+                </p>
+                <p className="text-base sm:text-lg font-bold tabular-nums text-muted-foreground">
+                  ${totalStake.toFixed(2)}
+                </p>
+              </div>
             </div>
           </div>
         </div>

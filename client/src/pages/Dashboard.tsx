@@ -229,7 +229,7 @@ export default function Dashboard({
           {opportunities.length > 0 ? (
             <>
               {viewMode === "cards" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6" data-testid="grid-opportunities">
+                <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 sm:gap-6" data-testid="grid-opportunities">
                   {opportunities.map((opp) => (
                     <ArbitrageCard
                       key={opp.id}
