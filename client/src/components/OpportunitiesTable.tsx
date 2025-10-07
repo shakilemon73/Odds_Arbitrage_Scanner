@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, DollarSign } from "lucide-react";
+import { ArrowRight, DollarSign, TrendingUp, Clock, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ArbitrageOpportunity } from "@/components/ArbitrageCard";
 
@@ -26,9 +26,16 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
 
   const getProfitColor = (profit: number) => {
     const level = getProfitLevel(profit);
-    if (level === "high") return "text-success";
-    if (level === "medium") return "text-warning";
+    if (level === "high") return "text-emerald-600 dark:text-emerald-400";
+    if (level === "medium") return "text-amber-600 dark:text-amber-400";
     return "text-muted-foreground";
+  };
+
+  const getProfitBgColor = (profit: number) => {
+    const level = getProfitLevel(profit);
+    if (level === "high") return "bg-emerald-500/10";
+    if (level === "medium") return "bg-amber-500/10";
+    return "bg-muted/50";
   };
 
   const timeAgo = (timestamp: string) => {
@@ -42,18 +49,38 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
   };
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
+    <div className="rounded-xl border-2 border-border overflow-hidden bg-card">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/30">
-            <TableHead className="font-semibold">Match</TableHead>
-            <TableHead className="font-semibold">Sport</TableHead>
-            <TableHead className="font-semibold">Bookmakers</TableHead>
-            <TableHead className="font-semibold text-right">Profit</TableHead>
-            <TableHead className="font-semibold text-right">Stake</TableHead>
-            <TableHead className="font-semibold text-right">Returns</TableHead>
-            <TableHead className="font-semibold text-right">Time</TableHead>
-            <TableHead className="font-semibold text-right">Action</TableHead>
+          <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
+            <TableHead className="font-bold text-xs uppercase tracking-wider h-12">
+              <div className="flex items-center gap-2">
+                <Target className="h-3.5 w-3.5" />
+                Match
+              </div>
+            </TableHead>
+            <TableHead className="font-bold text-xs uppercase tracking-wider">Sport</TableHead>
+            <TableHead className="font-bold text-xs uppercase tracking-wider">Bookmakers</TableHead>
+            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">
+              <div className="flex items-center justify-end gap-2">
+                <TrendingUp className="h-3.5 w-3.5" />
+                Profit %
+              </div>
+            </TableHead>
+            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">
+              <div className="flex items-center justify-end gap-2">
+                <DollarSign className="h-3.5 w-3.5" />
+                Stake
+              </div>
+            </TableHead>
+            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Returns</TableHead>
+            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">
+              <div className="flex items-center justify-end gap-2">
+                <Clock className="h-3.5 w-3.5" />
+                Time
+              </div>
+            </TableHead>
+            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -64,56 +91,71 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
             return (
               <TableRow 
                 key={opp.id} 
-                className="hover-elevate cursor-pointer"
+                className="hover-elevate cursor-pointer transition-all h-16 border-b"
                 onClick={() => onClick?.(opp)}
                 data-testid={`row-opportunity-${opp.id}`}
               >
-                <TableCell className="font-medium max-w-[200px]">
-                  <div className="truncate" title={opp.match}>{opp.match}</div>
+                <TableCell className="font-bold text-sm" data-testid="cell-match">
+                  {opp.match}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="font-semibold text-xs">
                     {opp.sport}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1.5">
                     {opp.bookmakers.map((bm, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
+                      <Badge 
+                        key={idx} 
+                        variant="secondary" 
+                        className="text-xs font-medium"
+                      >
                         {bm.name}
                       </Badge>
                     ))}
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className={cn("font-bold", getProfitColor(opp.profit))}>
+                  <div className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tabular-nums text-base",
+                    getProfitBgColor(opp.profit),
+                    getProfitColor(opp.profit)
+                  )} data-testid="cell-profit">
                     {opp.profit.toFixed(2)}%
-                  </span>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className="text-muted-foreground">
+                  <span className="font-bold tabular-nums text-sm" data-testid="cell-stake">
                     ${totalStake.toFixed(2)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className="font-semibold text-success">
-                    +${guaranteedProfit.toFixed(2)}
+                  <span className={cn(
+                    "font-bold tabular-nums text-sm",
+                    getProfitColor(opp.profit)
+                  )} data-testid="cell-returns">
+                    ${guaranteedProfit.toFixed(2)}
                   </span>
                 </TableCell>
-                <TableCell className="text-right text-xs text-muted-foreground">
-                  {timeAgo(opp.timestamp)}
+                <TableCell className="text-right">
+                  <span className="text-xs text-muted-foreground font-medium tabular-nums" data-testid="cell-time">
+                    {timeAgo(opp.timestamp)}
+                  </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="ghost"
                     onClick={(e) => {
                       e.stopPropagation();
                       onClick?.(opp);
                     }}
-                    data-testid={`button-view-${opp.id}`}
+                    className="gap-1.5 font-semibold"
+                    data-testid="button-view-details"
                   >
                     <DollarSign className="h-4 w-4" />
+                    View
                   </Button>
                 </TableCell>
               </TableRow>

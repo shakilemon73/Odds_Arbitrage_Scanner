@@ -12,7 +12,9 @@ import {
   Clock,
   ArrowRight,
   DollarSign,
-  Zap
+  Zap,
+  Target,
+  Percent
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -109,7 +111,7 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
       className={cn(
         "group relative overflow-hidden hover-elevate active-elevate-2 cursor-pointer transition-all duration-300",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        "border-card-border"
+        "border-2 border-card-border hover:border-primary/30"
       )}
       onClick={onClick}
       onKeyDown={handleKeyDown}
@@ -121,154 +123,142 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
       {/* Gradient Background */}
       <div 
         className={cn(
-          "absolute inset-0 bg-gradient-to-br opacity-50 dark:opacity-40 transition-opacity duration-300 group-hover:opacity-70",
+          "absolute inset-0 bg-gradient-to-br opacity-40 dark:opacity-30 transition-opacity duration-300 group-hover:opacity-60",
           profitGradientClass
         )} 
         aria-hidden="true"
       />
 
-      <CardHeader className="relative pb-4 space-y-4">
+      <CardHeader className="relative pb-5 space-y-5">
         {/* Header Section */}
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="flex items-start gap-4 flex-1 min-w-0">
             <div className={cn(
-              "mt-0.5 p-1.5 rounded-lg shrink-0 transition-all duration-200",
-              "bg-primary/10 dark:bg-primary/15 group-hover:bg-primary/20 dark:group-hover:bg-primary/25"
+              "mt-1 p-2.5 rounded-xl shrink-0 transition-all duration-300",
+              "bg-primary/10 dark:bg-primary/15 group-hover:bg-primary/20 dark:group-hover:bg-primary/25",
+              "group-hover:scale-110"
             )}>
-              <SportIcon className="h-4 w-4 text-primary" aria-hidden="true" />
+              <SportIcon className="h-5 w-5 text-primary" aria-hidden="true" />
             </div>
-            <div className="flex-1 min-w-0 space-y-1">
-              <h3 className="font-bold text-base leading-tight" data-testid="text-match">
+            <div className="flex-1 min-w-0 space-y-2">
+              <h3 className="font-bold text-lg leading-tight tracking-tight" data-testid="text-match">
                 {opportunity.match}
               </h3>
-              <p className="text-xs text-muted-foreground font-medium">{opportunity.sport}</p>
+              <p className="text-sm text-muted-foreground font-semibold">{opportunity.sport}</p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 shrink-0 px-3 py-1.5 rounded-full bg-muted/50 dark:bg-muted/30">
+          <div className="flex items-center gap-2 shrink-0">
             <Clock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-            <span className="text-xs font-medium text-muted-foreground" data-testid="text-timestamp" aria-label={`Updated ${timeAgo()}`}>
+            <span className="text-xs text-muted-foreground font-medium tabular-nums" data-testid="text-timestamp">
               {timeAgo()}
             </span>
           </div>
         </div>
 
-        {/* Profit Display - Hero Section */}
-        <div 
-          className={cn(
-            "rounded-xl border-2 p-4 backdrop-blur-sm transition-all duration-200",
-            "group-hover:scale-[1.01]",
-            profitBgClass
-          )}
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <Zap className={cn("h-4 w-4", profitIconClass)} aria-hidden="true" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Guaranteed Return
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <div className={cn("text-4xl font-black font-mono tabular-nums tracking-tight", profitTextClass)} data-testid="badge-profit">
+        {/* Profit Section - More Prominent */}
+        <div className={cn(
+          "relative rounded-2xl p-5 border-2 transition-all duration-300",
+          profitBgClass,
+          "group-hover:shadow-lg"
+        )}>
+          <div className="flex items-center justify-between gap-6">
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5" />
+                Guaranteed Return
+              </p>
+              <div className="flex items-baseline gap-3">
+                <p className={cn(
+                  "text-4xl font-black tabular-nums tracking-tight",
+                  profitTextClass
+                )} data-testid="text-profit">
                   {opportunity.profit.toFixed(2)}%
-                </div>
-                <TrendingUp className={cn("h-5 w-5 mb-1", profitIconClass)} aria-hidden="true" />
+                </p>
+                <TrendingUp className={cn("h-6 w-6", profitIconClass)} aria-hidden="true" />
               </div>
             </div>
-            <div className="text-right space-y-1.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            
+            <div className="text-right space-y-1">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center justify-end gap-1.5">
+                <DollarSign className="h-3.5 w-3.5" />
                 Profit Amount
-              </div>
-              <div className={cn("text-2xl font-bold font-mono tabular-nums", profitTextClass)}>
+              </p>
+              <p className={cn(
+                "text-3xl font-bold tabular-nums",
+                profitTextClass
+              )} data-testid="text-profit-amount">
                 ${guaranteedProfit.toFixed(2)}
-              </div>
-              <div className="text-[10px] text-muted-foreground font-medium">
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">
                 on ${totalStake.toFixed(2)}
-              </div>
+              </p>
             </div>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="relative pb-5 space-y-4">
-        {/* Bookmakers Section */}
-        <div className="space-y-3" aria-label="Bookmaker odds">
-          {opportunity.bookmakers.map((bookie, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                "relative overflow-hidden rounded-lg p-3 transition-all duration-200",
-                "bg-card dark:bg-muted/20 border border-card-border",
-                "hover:bg-muted/30 dark:hover:bg-muted/30"
-              )}
-              data-testid={`bookmaker-${idx}`}
-            >
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" aria-hidden="true" />
-                    <span className="font-bold text-sm">{bookie.name}</span>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-[10px] font-semibold px-2 py-0.5"
-                  >
-                    {bookie.outcome}
+      <CardContent className="relative pt-0 pb-6 space-y-4">
+        {/* Bookmaker Bets */}
+        <div className="space-y-3">
+          <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5 px-1">
+            <Target className="h-3.5 w-3.5" />
+            Betting Strategy
+          </h4>
+          <div className="space-y-2.5">
+            {opportunity.bookmakers.map((bookmaker, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "flex items-center justify-between gap-4 p-4 rounded-xl",
+                  "bg-card/50 dark:bg-card/30 border border-border/50",
+                  "transition-all duration-200 hover-elevate"
+                )}
+                data-testid={`bookmaker-bet-${idx}`}
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Badge variant="outline" className="shrink-0 font-semibold text-xs px-3 py-1">
+                    {bookmaker.name}
                   </Badge>
+                  <span className="font-semibold text-sm truncate" data-testid="text-outcome">
+                    {bookmaker.outcome}
+                  </span>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                      Odds
-                    </div>
-                    <div className="text-xl font-bold font-mono tabular-nums" data-testid={`odds-${idx}`}>
-                      {bookie.odds.toFixed(2)}
-                    </div>
+
+                <div className="flex items-center gap-6 shrink-0">
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Odds</p>
+                    <p className="text-base font-bold tabular-nums" data-testid="text-odds">
+                      {bookmaker.odds.toFixed(2)}
+                    </p>
                   </div>
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                      Stake Required
-                    </div>
-                    <div className="text-xl font-bold font-mono tabular-nums" data-testid={`stake-${idx}`}>
-                      ${bookie.stake.toFixed(2)}
-                    </div>
+                  
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Stake</p>
+                    <p className="text-base font-bold tabular-nums" data-testid="text-stake">
+                      ${bookmaker.stake.toFixed(2)}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* Action Section */}
-        <div className="pt-3 border-t border-border/50 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-              Total Investment
-            </span>
-            <span className="text-lg font-black font-mono tabular-nums">
-              ${totalStake.toFixed(2)}
-            </span>
-          </div>
-          
-          <Button 
-            variant="default"
-            size="default"
-            className={cn(
-              "w-full gap-2 font-bold text-sm h-10",
-              "shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
-            )}
-            data-testid="button-view-details"
+        {/* Action Indicator */}
+        <div className="flex items-center justify-center pt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-sm font-semibold group/btn"
             onClick={(e) => {
               e.stopPropagation();
               onClick?.();
             }}
-            aria-label="View detailed breakdown and place bets"
           >
-            <DollarSign className="h-4 w-4" />
-            View Details & Place Bets
-            <ArrowRight className="h-4 w-4" />
+            View Full Details
+            <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
           </Button>
         </div>
       </CardContent>
