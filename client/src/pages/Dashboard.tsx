@@ -5,6 +5,7 @@ import FilterBar, { type BookmakerWithCount } from "@/components/FilterBar";
 import ArbitrageCard, { type ArbitrageOpportunity } from "@/components/ArbitrageCard";
 import EmptyState from "@/components/EmptyState";
 import SettingsDialog from "@/components/SettingsDialog";
+import CacheIndicator from "@/components/CacheIndicator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +13,8 @@ interface GetOddsResponse {
   opportunities: ArbitrageOpportunity[];
   count: number;
   cachedAt?: string;
+  isFromCache?: boolean;
+  cacheAge?: number;
 }
 
 export default function Dashboard() {
@@ -176,6 +179,12 @@ export default function Dashboard() {
         onMinProfitChange={setMinProfit}
         onClearFilters={handleClearFilters}
       />
+
+      {data?.isFromCache && (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0">
+          <CacheIndicator isFromCache={data.isFromCache} cacheAge={data.cacheAge} />
+        </div>
+      )}
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
         {isError ? (
