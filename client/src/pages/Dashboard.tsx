@@ -1,14 +1,19 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import DashboardHeader from "@/components/DashboardHeader";
-import FilterBar, { type BookmakerWithCount } from "@/components/FilterBar";
+import { StatsOverview } from "@/components/StatsOverview";
+import { OpportunitiesTable } from "@/components/OpportunitiesTable";
 import ArbitrageCard, { type ArbitrageOpportunity } from "@/components/ArbitrageCard";
 import EmptyState from "@/components/EmptyState";
 import SettingsDialog from "@/components/SettingsDialog";
 import CacheIndicator from "@/components/CacheIndicator";
+import ThemeToggle from "@/components/ThemeToggle";
+import StatusIndicator from "@/components/StatusIndicator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RefreshCw, LayoutGrid, TableIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { BookmakerWithCount } from "@/components/FilterBar";
 
 interface GetOddsResponse {
   opportunities: ArbitrageOpportunity[];
@@ -18,17 +23,34 @@ interface GetOddsResponse {
   cacheAge?: number;
 }
 
-export default function Dashboard() {
-  const [selectedSport, setSelectedSport] = useState("all");
-  const [selectedBookmakers, setSelectedBookmakers] = useState<string[]>([]);
-  const [minProfit, setMinProfit] = useState(0);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+interface DashboardProps {
+  selectedSport: string;
+  selectedBookmakers: string[];
+  minProfit: number;
+  availableBookmakers: BookmakerWithCount[];
+  onSportChange: (sport: string) => void;
+  onBookmakerToggle: (bookmaker: string) => void;
+  onMinProfitChange: (profit: number) => void;
+  onClearFilters: () => void;
+  onSettingsClick: () => void;
+}
 
-  // Build query parameters
+export default function Dashboard({
+  selectedSport,
+  selectedBookmakers,
+  minProfit,
+  availableBookmakers,
+  onSportChange,
+  onBookmakerToggle,
+  onMinProfitChange,
+  onClearFilters,
+  onSettingsClick,
+}: DashboardProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+
   const buildQueryUrl = () => {
     const params = new URLSearchParams();
-    
-    // Always send sports parameter (including "all")
     params.append("sports", selectedSport);
     
     if (minProfit > 0) {
@@ -40,11 +62,9 @@ export default function Dashboard() {
     }
     
     const queryString = params.toString();
-    // Ensure consistent query string format for cache key stability
     return `/api/odds${queryString ? `?${queryString}` : ""}`;
   };
 
-  // Fetch arbitrage opportunities from API
   const { 
     data, 
     isLoading, 
@@ -60,14 +80,12 @@ export default function Dashboard() {
         "Content-Type": "application/json",
       };
       
-      // Always send API key if available - let backend decide whether to use it
       if (apiKey.trim()) {
         headers["x-api-key"] = apiKey;
       }
       
       const response = await fetch(buildQueryUrl(), { headers });
       if (!response.ok) {
-        // Try to parse error response body for detailed error message
         try {
           const errorData = await response.json();
           throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
@@ -77,183 +95,164 @@ export default function Dashboard() {
       }
       return response.json();
     },
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
-    staleTime: 30000, // Consider data stale after 30 seconds (matches refetch interval)
+    refetchInterval: 30000,
+    staleTime: 30000,
   });
 
   const opportunities = data?.opportunities || [];
-
-  // Extract and count bookmakers from opportunities data
-  const availableBookmakers = useMemo<BookmakerWithCount[]>(() => {
-    if (!data?.opportunities || data.opportunities.length === 0) {
-      return [];
-    }
-
-    // Count how many times each bookmaker appears
-    const bookmakerCounts = new Map<string, number>();
-    
-    data.opportunities.forEach(opp => {
-      opp.bookmakers.forEach(b => {
-        bookmakerCounts.set(b.name, (bookmakerCounts.get(b.name) || 0) + 1);
-      });
-    });
-
-    // Convert to array with counts
-    const bookmakersWithCounts: BookmakerWithCount[] = Array.from(bookmakerCounts.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count); // Sort by count descending (most popular first)
-
-    // Limit to top 15 bookmakers
-    return bookmakersWithCounts.slice(0, 15);
-  }, [data?.opportunities]);
 
   const handleRefresh = () => {
     refetch();
   };
 
-  const handleBookmakerToggle = (bookmaker: string) => {
-    setSelectedBookmakers((prev) =>
-      prev.includes(bookmaker)
-        ? prev.filter((b) => b !== bookmaker)
-        : [...prev, bookmaker]
-    );
-  };
-
-  const handleClearFilters = () => {
-    setSelectedSport("all");
-    setSelectedBookmakers([]);
-    setMinProfit(0);
-  };
-
-  // Determine status indicator
   const getStatus = () => {
     if (isError) return "disconnected";
     if (data?.cachedAt) return "cached";
     return "connected";
   };
 
-  // Loading skeleton
+  const avgProfit = useMemo(() => {
+    if (opportunities.length === 0) return 0;
+    const total = opportunities.reduce((sum, opp) => sum + opp.profit, 0);
+    return total / opportunities.length;
+  }, [opportunities]);
+
+  const lastUpdated = useMemo(() => {
+    if (!data?.cachedAt) return "Live";
+    const date = new Date(data.cachedAt);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    return date.toLocaleTimeString();
+  }, [data?.cachedAt]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-background to-primary/3 pointer-events-none" aria-hidden="true" />
-        <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-        
-        <div className="relative">
-          <DashboardHeader
-            status="connected"
-            onRefresh={handleRefresh}
-            onSettingsClick={() => setSettingsOpen(true)}
-            isRefreshing={true}
-          />
-
-          <FilterBar
-            selectedSport={selectedSport}
-            selectedBookmakers={selectedBookmakers}
-            minProfit={minProfit}
-            availableBookmakers={availableBookmakers}
-            onSportChange={setSelectedSport}
-            onBookmakerToggle={handleBookmakerToggle}
-            onMinProfitChange={setMinProfit}
-            onClearFilters={handleClearFilters}
-          />
-
-          <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-80 w-full rounded-xl" data-testid={`skeleton-${i}`} />
+      <div className="flex flex-col h-screen">
+        <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">
+                Dashboard
+              </h1>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-9" />
+                <Skeleton className="h-9 w-9" />
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto px-6 py-6 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-24 w-full" data-testid={`skeleton-stat-${i}`} />
               ))}
             </div>
-          </main>
-
-          <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-80 w-full" data-testid={`skeleton-${i}`} />
+              ))}
+            </div>
+          </div>
+        </main>
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-background to-primary/3 pointer-events-none" aria-hidden="true" />
-      <div className="absolute top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
-      <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl pointer-events-none animate-pulse" aria-hidden="true" />
-      
-      <div className="relative">
-        <DashboardHeader
-          status={getStatus()}
-          onRefresh={handleRefresh}
-          onSettingsClick={() => setSettingsOpen(true)}
-          isRefreshing={isFetching}
-        />
-
-        <FilterBar
-          selectedSport={selectedSport}
-          selectedBookmakers={selectedBookmakers}
-          minProfit={minProfit}
-          availableBookmakers={availableBookmakers}
-          onSportChange={setSelectedSport}
-          onBookmakerToggle={handleBookmakerToggle}
-          onMinProfitChange={setMinProfit}
-          onClearFilters={handleClearFilters}
-        />
-
-        {data?.isFromCache && (
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-0">
-            <CacheIndicator isFromCache={data.isFromCache} cacheAge={data.cacheAge} />
-          </div>
-        )}
-
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
-          {isError ? (
-            <div className="text-center py-16" role="alert">
-              <div className={cn(
-                "rounded-2xl p-8 mb-6 inline-block",
-                "bg-destructive/10 dark:bg-destructive/15 backdrop-blur-sm",
-                "border border-destructive/20"
-              )}>
-                <svg className="h-16 w-16 text-destructive mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold mb-3">Connection Error</h2>
-              <p className="text-muted-foreground text-base mb-8 max-w-md mx-auto" data-testid="text-error">
-                Unable to load arbitrage opportunities. Please check your connection and try again.
-              </p>
-              <Button
-                onClick={handleRefresh}
-                variant="default"
-                size="lg"
-                data-testid="button-retry"
-                className="gap-2 font-bold shadow-lg shadow-primary/20"
-              >
-                Try Again
-              </Button>
+    <div className="flex flex-col h-screen">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">
+                Dashboard
+              </h1>
+              <StatusIndicator status={getStatus()} data-testid="status-indicator" />
+              {data?.cachedAt && (
+                <CacheIndicator 
+                  cachedAt={data.cachedAt} 
+                  cacheAge={data.cacheAge}
+                  data-testid="cache-indicator"
+                />
+              )}
             </div>
-          ) : opportunities.length > 0 ? (
-            <div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              role="feed"
-              aria-label="Arbitrage opportunities"
-              aria-busy={isFetching}
-            >
-              {opportunities.map((opp) => (
-                <ArbitrageCard
-                  key={opp.id}
-                  opportunity={opp}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isFetching}
+                data-testid="button-refresh"
+                className="gap-2"
+              >
+                <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+                Refresh
+              </Button>
+              <ThemeToggle />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 overflow-auto">
+        <div className="container mx-auto px-6 py-6 space-y-6">
+          <StatsOverview
+            totalOpportunities={opportunities.length}
+            avgProfit={avgProfit}
+            lastUpdated={lastUpdated}
+            isLoading={isFetching}
+          />
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold" data-testid="text-opportunities-title">
+              Opportunities ({opportunities.length})
+            </h2>
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "cards" | "table")}>
+              <TabsList data-testid="tabs-view-mode">
+                <TabsTrigger value="cards" className="gap-2" data-testid="tab-cards">
+                  <LayoutGrid className="h-4 w-4" />
+                  Cards
+                </TabsTrigger>
+                <TabsTrigger value="table" className="gap-2" data-testid="tab-table">
+                  <TableIcon className="h-4 w-4" />
+                  Table
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {opportunities.length > 0 ? (
+            <>
+              {viewMode === "cards" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="grid-opportunities">
+                  {opportunities.map((opp) => (
+                    <ArbitrageCard
+                      key={opp.id}
+                      opportunity={opp}
+                      onClick={() => {}}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <OpportunitiesTable 
+                  opportunities={opportunities}
                   onClick={() => {}}
                 />
-              ))}
-            </div>
+              )}
+            </>
           ) : (
             <EmptyState onRefresh={handleRefresh} />
           )}
-        </main>
+        </div>
+      </main>
 
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      </div>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
