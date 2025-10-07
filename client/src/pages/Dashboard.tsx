@@ -5,6 +5,7 @@ import { OpportunitiesTable } from "@/components/OpportunitiesTable";
 import ArbitrageCard, { type ArbitrageOpportunity } from "@/components/ArbitrageCard";
 import EmptyState from "@/components/EmptyState";
 import SettingsDialog from "@/components/SettingsDialog";
+import OpportunityDetailsDialog from "@/components/OpportunityDetailsDialog";
 import CacheIndicator from "@/components/CacheIndicator";
 import ThemeToggle from "@/components/ThemeToggle";
 import StatusIndicator from "@/components/StatusIndicator";
@@ -48,6 +49,8 @@ export default function Dashboard({
 }: DashboardProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [selectedOpportunity, setSelectedOpportunity] = useState<ArbitrageOpportunity | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const { data: settings } = useQuery({
     queryKey: ["/api/settings"],
@@ -113,6 +116,11 @@ export default function Dashboard({
 
   const handleRefresh = () => {
     refetch();
+  };
+
+  const handleCardClick = (opportunity: ArbitrageOpportunity) => {
+    setSelectedOpportunity(opportunity);
+    setDetailsOpen(true);
   };
 
   const getStatus = () => {
@@ -244,7 +252,7 @@ export default function Dashboard({
                     <ArbitrageCard
                       key={opp.id}
                       opportunity={opp}
-                      onClick={() => {}}
+                      onClick={() => handleCardClick(opp)}
                     />
                   ))}
                 </div>
@@ -252,7 +260,7 @@ export default function Dashboard({
                 <div className="overflow-x-auto -mx-3 sm:mx-0">
                   <OpportunitiesTable 
                     opportunities={opportunities}
-                    onClick={() => {}}
+                    onClick={handleCardClick}
                   />
                 </div>
               )}
@@ -264,6 +272,11 @@ export default function Dashboard({
       </main>
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <OpportunityDetailsDialog
+        opportunity={selectedOpportunity}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
     </div>
   );
 }

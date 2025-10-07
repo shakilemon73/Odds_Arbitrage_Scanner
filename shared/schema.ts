@@ -26,6 +26,7 @@ export const arbitrageOpportunitySchema = z.object({
   timestamp: z.string(),
   eventId: z.string().optional(),
   commenceTime: z.string().optional(),
+  dataSource: z.enum(["live", "mock", "cached"]).optional(),
 });
 
 export type ArbitrageOpportunity = z.infer<typeof arbitrageOpportunitySchema>;
@@ -144,6 +145,8 @@ export const settingsSchema = z.object({
   mockMode: z.boolean().default(false),
   cacheTimeout: z.number().min(10).max(300).default(60),
   autoRefreshInterval: z.number().min(10).max(300).default(30),
+  showMockData: z.boolean().default(true),
+  showLiveData: z.boolean().default(true),
   sports: z.array(sportSchema).optional(),
 });
 

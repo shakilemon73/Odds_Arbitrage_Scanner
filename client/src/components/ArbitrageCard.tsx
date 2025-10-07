@@ -14,7 +14,10 @@ import {
   DollarSign,
   Zap,
   Target,
-  Percent
+  Percent,
+  Wifi,
+  Database,
+  TestTube
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +33,7 @@ export interface ArbitrageOpportunity {
   }[];
   profit: number;
   timestamp: string;
+  dataSource?: "live" | "mock" | "cached";
 }
 
 interface ArbitrageCardProps {
@@ -77,6 +81,42 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
 
   const totalStake = opportunity.bookmakers.reduce((sum, b) => sum + b.stake, 0);
   const guaranteedProfit = (totalStake * opportunity.profit) / 100;
+
+  const getDataSourceBadge = () => {
+    if (!opportunity.dataSource) return null;
+    
+    const sourceConfig = {
+      live: {
+        label: "Live",
+        icon: Wifi,
+        className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+      },
+      mock: {
+        label: "Mock",
+        icon: TestTube,
+        className: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30",
+      },
+      cached: {
+        label: "Cached",
+        icon: Database,
+        className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
+      },
+    };
+
+    const config = sourceConfig[opportunity.dataSource];
+    const SourceIcon = config.icon;
+
+    return (
+      <Badge
+        variant="outline"
+        className={cn("gap-1.5 !h-7 border-2", config.className)}
+        data-testid={`badge-source-${opportunity.dataSource}`}
+      >
+        <SourceIcon className="h-3 w-3" />
+        <span className="text-xs font-semibold">{config.label}</span>
+      </Badge>
+    );
+  };
 
   const profitGradientClass = 
     profitLevel === "high"
@@ -147,11 +187,14 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
               <p className="text-xs sm:text-sm text-muted-foreground font-semibold">{opportunity.sport}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" aria-hidden="true" />
-            <span className="text-xs text-muted-foreground font-medium tabular-nums" data-testid="text-timestamp">
-              {timeAgo()}
-            </span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0 self-start sm:self-auto">
+            {getDataSourceBadge()}
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" aria-hidden="true" />
+              <span className="text-xs text-muted-foreground font-medium tabular-nums" data-testid="text-timestamp">
+                {timeAgo()}
+              </span>
+            </div>
           </div>
         </div>
 

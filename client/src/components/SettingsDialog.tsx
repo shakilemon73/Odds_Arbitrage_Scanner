@@ -25,6 +25,8 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [showApiKey, setShowApiKey] = useState(false);
   const [mockMode, setMockMode] = useState(() => localStorage.getItem("mockMode") === "true");
   const [autoRefreshInterval, setAutoRefreshInterval] = useState(30);
+  const [showMockData, setShowMockData] = useState(true);
+  const [showLiveData, setShowLiveData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
@@ -43,6 +45,8 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         const settings = await response.json();
         setAutoRefreshInterval(settings.autoRefreshInterval || 30);
         setMockMode(settings.mockMode || false);
+        setShowMockData(settings.showMockData ?? true);
+        setShowLiveData(settings.showLiveData ?? true);
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -69,7 +73,9 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           mockMode,
-          autoRefreshInterval 
+          autoRefreshInterval,
+          showMockData,
+          showLiveData 
         }),
       });
       
@@ -201,6 +207,43 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
             <p className="text-xs text-muted-foreground">
               How often to automatically refresh odds data (10-300 seconds)
             </p>
+          </div>
+
+          <div className="space-y-4 pt-2 border-t">
+            <Label className="text-base">Data Sources</Label>
+            
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="show-mock">Show Mock Data</Label>
+                <p className="text-xs text-muted-foreground">
+                  Display simulated arbitrage opportunities
+                </p>
+              </div>
+              <Switch
+                id="show-mock"
+                checked={showMockData}
+                onCheckedChange={setShowMockData}
+                data-testid="switch-show-mock"
+                aria-label="Toggle mock data display"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="show-live">Show Live Data</Label>
+                <p className="text-xs text-muted-foreground">
+                  Display real-time API data {!apiKey.trim() && "(requires API key)"}
+                </p>
+              </div>
+              <Switch
+                id="show-live"
+                checked={showLiveData}
+                onCheckedChange={setShowLiveData}
+                data-testid="switch-show-live"
+                aria-label="Toggle live data display"
+                disabled={!apiKey.trim()}
+              />
+            </div>
           </div>
 
           {saveError && (

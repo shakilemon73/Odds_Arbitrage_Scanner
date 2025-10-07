@@ -88,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate with Zod
       const validated = getOddsRequestSchema.parse(queryParams);
 
-      // Get settings to determine mock mode
+      // Get settings to determine data sources
       const settings = await storage.getSettings();
       
       // Get API key from environment or request header
@@ -97,37 +97,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const apiKey = envApiKey || headerApiKey || undefined;
       
       console.log(`[API] API Key source: ${envApiKey ? 'environment' : headerApiKey ? 'header' : 'none'}`);
-      console.log(`[API] Mock mode: ${settings.mockMode}`);
-      
-      // Create odds provider (mock or real)
-      const provider = createOddsProvider(apiKey, settings.mockMode);
-      
-      console.log(`[API] Fetching odds using ${provider.getName()}`);
+      console.log(`[API] Show Mock: ${settings.showMockData}, Show Live: ${settings.showLiveData}`);
       
       // Map general sport categories to specific leagues
       const sportInputs = validated.sports || ["upcoming"];
       const sports = sportInputs.flatMap(mapSportInputToLeagues);
-      
-      // Remove duplicates
       const uniqueSports = Array.from(new Set(sports)) as Sport[];
       
-      // Log which sports are being fetched for debugging
       console.log(`[API] Fetching odds for sports:`, uniqueSports);
       
-      // Fetch odds from provider
-      const oddsResult = await provider.fetchOdds(uniqueSports);
+      let allOpportunities: any[] = [];
+      let isFromCache = false;
+      let cacheAge: number | undefined = undefined;
       
-      // Calculate arbitrage opportunities
-      const opportunities = findAllArbitrageOpportunities(
-        oddsResult.events,
-        validated.minProfit || 0
-      );
+      // Fetch mock data if enabled
+      if (settings.showMockData) {
+        const mockProvider = new (await import('./odds-provider')).MockOddsProvider();
+        const mockResult = await mockProvider.fetchOdds(uniqueSports);
+        const mockOpportunities = findAllArbitrageOpportunities(
+          mockResult.events,
+          validated.minProfit || 0
+        ).map(opp => ({ ...opp, dataSource: 'mock' as const }));
+        allOpportunities.push(...mockOpportunities);
+        console.log(`[API] Added ${mockOpportunities.length} mock opportunities`);
+      }
+      
+      // Fetch live data if enabled and API key is available
+      if (settings.showLiveData && apiKey && !settings.mockMode) {
+        try {
+          const liveProvider = createOddsProvider(apiKey, false);
+          const liveResult = await liveProvider.fetchOdds(uniqueSports);
+          const liveOpportunities = findAllArbitrageOpportunities(
+            liveResult.events,
+            validated.minProfit || 0
+          ).map(opp => ({ 
+            ...opp, 
+            dataSource: liveResult.isFromCache ? 'cached' as const : 'live' as const 
+          }));
+          allOpportunities.push(...liveOpportunities);
+          isFromCache = liveResult.isFromCache;
+          cacheAge = liveResult.cacheAge;
+          console.log(`[API] Added ${liveOpportunities.length} live opportunities (cached: ${isFromCache})`);
+        } catch (error) {
+          console.error(`[API] Error fetching live data:`, error);
+        }
+      }
+      
+      // Calculate combined opportunities
+      const opportunities = allOpportunities;
 
       // Filter by bookmakers if specified
       let filteredOpportunities = opportunities;
       if (validated.bookmakers && validated.bookmakers.length > 0) {
         filteredOpportunities = opportunities.filter(opp => 
-          opp.bookmakers.some(b => validated.bookmakers!.includes(b.name))
+          opp.bookmakers.some((b: any) => validated.bookmakers!.includes(b.name))
         );
       }
 
@@ -138,8 +161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         opportunities: filteredOpportunities,
         count: filteredOpportunities.length,
         cachedAt: new Date().toISOString(),
-        isFromCache: oddsResult.isFromCache,
-        cacheAge: oddsResult.cacheAge,
+        isFromCache,
+        cacheAge,
       };
 
       res.json(response);

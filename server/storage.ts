@@ -25,6 +25,8 @@ export class MemStorage implements IStorage {
       mockMode: process.env.MOCK_ODDS === "true",
       cacheTimeout: 60,
       autoRefreshInterval: 30,
+      showMockData: true,
+      showLiveData: true,
     };
     this.cachedOpportunities = [];
   }
