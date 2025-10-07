@@ -6,6 +6,7 @@ import ArbitrageCard, { type ArbitrageOpportunity } from "@/components/Arbitrage
 import EmptyState from "@/components/EmptyState";
 import SettingsDialog from "@/components/SettingsDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 interface GetOddsResponse {
   opportunities: ArbitrageOpportunity[];
@@ -176,22 +177,34 @@ export default function Dashboard() {
         onClearFilters={handleClearFilters}
       />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
         {isError ? (
-          <div className="text-center py-12">
-            <p className="text-destructive text-lg mb-4" data-testid="text-error">
-              Failed to load arbitrage opportunities
+          <div className="text-center py-12" role="alert">
+            <div className="rounded-full bg-destructive/10 p-6 mb-6 inline-block">
+              <svg className="h-12 w-12 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold mb-2">Connection Error</h2>
+            <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto" data-testid="text-error">
+              Unable to load opportunities
             </p>
-            <button
+            <Button
               onClick={handleRefresh}
-              className="text-primary hover:underline"
+              variant="default"
               data-testid="button-retry"
+              className="h-11 px-6"
             >
-              Try again
-            </button>
+              Try Again
+            </Button>
           </div>
         ) : opportunities.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            role="feed"
+            aria-label="Arbitrage opportunities"
+            aria-busy={isFetching}
+          >
             {opportunities.map((opp) => (
               <ArbitrageCard
                 key={opp.id}

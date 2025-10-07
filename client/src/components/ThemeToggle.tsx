@@ -8,15 +8,15 @@ export default function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
       onClick={toggleTheme}
       data-testid="button-theme-toggle"
-      className="h-9 w-9"
+      className="h-11 w-11 p-0"
+      aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
     >
       {theme === "light" ? (
-        <Moon className="h-4 w-4" />
+        <Moon className="h-4 w-4" aria-hidden="true" />
       ) : (
-        <Sun className="h-4 w-4" />
+        <Sun className="h-4 w-4" aria-hidden="true" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>
