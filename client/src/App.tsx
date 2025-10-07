@@ -10,6 +10,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/not-found";
+import SettingsDialog from "@/components/SettingsDialog";
 import type { BookmakerWithCount } from "@/components/FilterBar";
 import type { ArbitrageOpportunity } from "@/components/ArbitrageCard";
 
@@ -141,6 +142,7 @@ function DashboardWrapper() {
           />
         </div>
       </div>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </SidebarProvider>
   );
 }
