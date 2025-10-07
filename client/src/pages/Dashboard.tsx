@@ -174,11 +174,10 @@ export default function Dashboard({
                 Dashboard
               </h1>
               <StatusIndicator status={getStatus()} data-testid="status-indicator" />
-              {data?.cachedAt && (
+              {data?.isFromCache && (
                 <CacheIndicator 
-                  cachedAt={data.cachedAt} 
+                  isFromCache={data.isFromCache} 
                   cacheAge={data.cacheAge}
-                  data-testid="cache-indicator"
                 />
               )}
             </div>
