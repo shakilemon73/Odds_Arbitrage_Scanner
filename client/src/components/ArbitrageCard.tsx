@@ -129,62 +129,62 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         aria-hidden="true"
       />
 
-      <CardHeader className="relative pb-5 space-y-5">
+      <CardHeader className="relative pb-4 sm:pb-5 space-y-3 sm:space-y-5 p-4 sm:p-6">
         {/* Header Section */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className={cn(
-              "mt-1 p-2.5 rounded-xl shrink-0 transition-all duration-300",
+              "mt-0.5 sm:mt-1 p-2 sm:p-2.5 rounded-lg sm:rounded-xl shrink-0 transition-all duration-300",
               "bg-primary/10 dark:bg-primary/15 group-hover:bg-primary/20 dark:group-hover:bg-primary/25",
               "group-hover:scale-110"
             )}>
-              <SportIcon className="h-5 w-5 text-primary" aria-hidden="true" />
+              <SportIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" aria-hidden="true" />
             </div>
-            <div className="flex-1 min-w-0 space-y-2">
-              <h3 className="font-bold text-lg leading-tight tracking-tight" data-testid="text-match">
+            <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
+              <h3 className="font-bold text-base sm:text-lg leading-tight tracking-tight" data-testid="text-match">
                 {opportunity.match}
               </h3>
-              <p className="text-sm text-muted-foreground font-semibold">{opportunity.sport}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground font-semibold">{opportunity.sport}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" aria-hidden="true" />
             <span className="text-xs text-muted-foreground font-medium tabular-nums" data-testid="text-timestamp">
               {timeAgo()}
             </span>
           </div>
         </div>
 
-        {/* Profit Section - More Prominent */}
+        {/* Profit Section - Responsive Layout */}
         <div className={cn(
-          "relative rounded-2xl p-5 border-2 transition-all duration-300",
+          "relative rounded-xl sm:rounded-2xl p-3 sm:p-5 border-2 transition-all duration-300",
           profitBgClass,
           "group-hover:shadow-lg"
         )}>
-          <div className="flex items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
             <div className="space-y-1">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5" />
+              <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1 sm:gap-1.5">
+                <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Guaranteed Return
               </p>
-              <div className="flex items-baseline gap-3">
+              <div className="flex items-baseline gap-2 sm:gap-3">
                 <p className={cn(
-                  "text-4xl font-black tabular-nums tracking-tight",
+                  "text-3xl sm:text-4xl font-black tabular-nums tracking-tight",
                   profitTextClass
                 )} data-testid="text-profit">
                   {opportunity.profit.toFixed(2)}%
                 </p>
-                <TrendingUp className={cn("h-6 w-6", profitIconClass)} aria-hidden="true" />
+                <TrendingUp className={cn("h-5 w-5 sm:h-6 sm:w-6", profitIconClass)} aria-hidden="true" />
               </div>
             </div>
             
-            <div className="text-right space-y-1">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center justify-end gap-1.5">
-                <DollarSign className="h-3.5 w-3.5" />
+            <div className="text-left sm:text-right space-y-1">
+              <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1 sm:gap-1.5 sm:justify-end">
+                <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Profit Amount
               </p>
               <p className={cn(
-                "text-3xl font-bold tabular-nums",
+                "text-2xl sm:text-3xl font-bold tabular-nums",
                 profitTextClass
               )} data-testid="text-profit-amount">
                 ${guaranteedProfit.toFixed(2)}
@@ -197,46 +197,47 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         </div>
       </CardHeader>
 
-      <CardContent className="relative pt-0 pb-6 space-y-4">
+      <CardContent className="relative pt-0 pb-4 sm:pb-6 px-4 sm:px-6 space-y-3 sm:space-y-4">
         {/* Bookmaker Bets */}
-        <div className="space-y-3">
-          <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5 px-1">
-            <Target className="h-3.5 w-3.5" />
+        <div className="space-y-2 sm:space-y-3">
+          <h4 className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1 sm:gap-1.5 px-1">
+            <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             Betting Strategy
           </h4>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {opportunity.bookmakers.map((bookmaker, idx) => (
               <div
                 key={idx}
                 className={cn(
-                  "flex items-center justify-between gap-4 p-4 rounded-xl",
+                  "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4",
+                  "p-3 sm:p-4 rounded-lg sm:rounded-xl",
                   "bg-card/50 dark:bg-card/30 border border-border/50",
                   "transition-all duration-200 hover-elevate"
                 )}
                 data-testid={`bookmaker-bet-${idx}`}
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Badge variant="outline" className="shrink-0 font-semibold text-xs px-3 py-1">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  <Badge variant="outline" className="shrink-0 font-semibold text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1">
                     {bookmaker.name}
                   </Badge>
-                  <span className="font-semibold text-sm truncate" data-testid="text-outcome">
+                  <span className="font-semibold text-xs sm:text-sm truncate" data-testid="text-outcome">
                     {bookmaker.outcome}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-6 shrink-0">
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Odds</p>
-                    <p className="text-base font-bold tabular-nums" data-testid="text-odds">
+                <div className="flex items-center gap-3 sm:gap-6 shrink-0 justify-between sm:justify-end">
+                  <div className="text-left sm:text-right">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-bold">Odds</p>
+                    <p className="text-sm sm:text-base font-bold tabular-nums" data-testid="text-odds">
                       {bookmaker.odds.toFixed(2)}
                     </p>
                   </div>
                   
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <ArrowRight className="hidden sm:block h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Stake</p>
-                    <p className="text-base font-bold tabular-nums" data-testid="text-stake">
+                  <div className="text-left sm:text-right">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-bold">Stake</p>
+                    <p className="text-sm sm:text-base font-bold tabular-nums" data-testid="text-stake">
                       ${bookmaker.stake.toFixed(2)}
                     </p>
                   </div>
@@ -247,18 +248,18 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         </div>
 
         {/* Action Indicator */}
-        <div className="flex items-center justify-center pt-2">
+        <div className="flex items-center justify-center pt-1 sm:pt-2">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 text-sm font-semibold group/btn"
+            className="gap-2 text-xs sm:text-sm font-semibold group/btn w-full sm:w-auto"
             onClick={(e) => {
               e.stopPropagation();
               onClick?.();
             }}
           >
             View Full Details
-            <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+            <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 transition-transform group-hover/btn:translate-x-1" />
           </Button>
         </div>
       </CardContent>

@@ -61,7 +61,7 @@ export function StatsOverview({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
       {stats.map((stat, index) => (
         <Card 
           key={index} 
@@ -78,30 +78,30 @@ export function StatsOverview({
             "bg-gradient-to-br from-transparent to-black/5 dark:to-white/5"
           )} />
           
-          <div className="relative p-6 space-y-4">
+          <div className="relative p-4 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
             {/* Icon and Label */}
             <div className="flex items-center justify-between">
               <div className={cn(
-                "p-3 rounded-xl transition-all duration-300",
+                "p-2 sm:p-2.5 lg:p-3 rounded-lg sm:rounded-xl transition-all duration-300",
                 stat.bgColor,
                 "group-hover:scale-110"
               )}>
-                <stat.icon className={cn("h-5 w-5", stat.color)} />
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", stat.color)} />
               </div>
               {stat.trend && (
-                <ArrowUpRight className={cn("h-4 w-4", stat.color, "opacity-50")} />
+                <ArrowUpRight className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", stat.color, "opacity-50")} />
               )}
             </div>
 
             {/* Label */}
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-bold">
                 {stat.label}
               </p>
               
               {/* Value */}
               <p className={cn(
-                "text-3xl font-bold tracking-tight tabular-nums",
+                "text-2xl sm:text-3xl font-bold tracking-tight tabular-nums",
                 isLoading && "animate-pulse",
                 stat.color
               )} data-testid={`text-stat-value-${index}`}>
@@ -109,8 +109,8 @@ export function StatsOverview({
               </p>
               
               {/* Change indicator */}
-              <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                {stat.trend && <Sparkles className="h-3 w-3" />}
+              <p className="text-[10px] sm:text-xs text-muted-foreground font-medium flex items-center gap-1">
+                {stat.trend && <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />}
                 {stat.change}
               </p>
             </div>

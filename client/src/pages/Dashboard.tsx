@@ -167,10 +167,10 @@ export default function Dashboard({
   return (
     <div className="flex flex-col h-screen">
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-bold" data-testid="text-dashboard-title">
                 Dashboard
               </h1>
               <StatusIndicator status={getStatus()} data-testid="status-indicator" />
@@ -181,17 +181,17 @@ export default function Dashboard({
                 />
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
                 disabled={isFetching}
                 data-testid="button-refresh"
-                className="gap-2"
+                className="gap-1.5 sm:gap-2 text-xs sm:text-sm"
               >
-                <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-                Refresh
+                <RefreshCw className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isFetching && "animate-spin")} />
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
               <ThemeToggle />
             </div>
@@ -200,7 +200,7 @@ export default function Dashboard({
       </header>
 
       <main className="flex-1 overflow-auto">
-        <div className="container mx-auto px-6 py-6 space-y-6">
+        <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
           <StatsOverview
             totalOpportunities={opportunities.length}
             avgProfit={avgProfit}
@@ -208,18 +208,18 @@ export default function Dashboard({
             isLoading={isFetching}
           />
 
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold" data-testid="text-opportunities-title">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <h2 className="text-base sm:text-lg font-semibold" data-testid="text-opportunities-title">
               Opportunities ({opportunities.length})
             </h2>
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "cards" | "table")}>
-              <TabsList data-testid="tabs-view-mode">
-                <TabsTrigger value="cards" className="gap-2" data-testid="tab-cards">
-                  <LayoutGrid className="h-4 w-4" />
+              <TabsList data-testid="tabs-view-mode" className="w-full sm:w-auto">
+                <TabsTrigger value="cards" className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm" data-testid="tab-cards">
+                  <LayoutGrid className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Cards
                 </TabsTrigger>
-                <TabsTrigger value="table" className="gap-2" data-testid="tab-table">
-                  <TableIcon className="h-4 w-4" />
+                <TabsTrigger value="table" className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm" data-testid="tab-table">
+                  <TableIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Table
                 </TabsTrigger>
               </TabsList>
@@ -229,7 +229,7 @@ export default function Dashboard({
           {opportunities.length > 0 ? (
             <>
               {viewMode === "cards" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="grid-opportunities">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6" data-testid="grid-opportunities">
                   {opportunities.map((opp) => (
                     <ArbitrageCard
                       key={opp.id}
@@ -239,10 +239,12 @@ export default function Dashboard({
                   ))}
                 </div>
               ) : (
-                <OpportunitiesTable 
-                  opportunities={opportunities}
-                  onClick={() => {}}
-                />
+                <div className="overflow-x-auto -mx-3 sm:mx-0">
+                  <OpportunitiesTable 
+                    opportunities={opportunities}
+                    onClick={() => {}}
+                  />
+                </div>
               )}
             </>
           ) : (

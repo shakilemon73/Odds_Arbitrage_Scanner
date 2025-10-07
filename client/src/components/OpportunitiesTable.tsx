@@ -49,38 +49,38 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
   };
 
   return (
-    <div className="rounded-xl border-2 border-border overflow-hidden bg-card">
+    <div className="rounded-lg sm:rounded-xl border-2 border-border overflow-hidden bg-card">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
-            <TableHead className="font-bold text-xs uppercase tracking-wider h-12">
-              <div className="flex items-center gap-2">
-                <Target className="h-3.5 w-3.5" />
-                Match
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider h-10 sm:h-12 whitespace-nowrap">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span className="hidden sm:inline">Match</span>
               </div>
             </TableHead>
-            <TableHead className="font-bold text-xs uppercase tracking-wider">Sport</TableHead>
-            <TableHead className="font-bold text-xs uppercase tracking-wider">Bookmakers</TableHead>
-            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">
-              <div className="flex items-center justify-end gap-2">
-                <TrendingUp className="h-3.5 w-3.5" />
-                Profit %
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider whitespace-nowrap">Sport</TableHead>
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider whitespace-nowrap">Bookmakers</TableHead>
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-right whitespace-nowrap">
+              <div className="flex items-center justify-end gap-1 sm:gap-2">
+                <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                Profit
               </div>
             </TableHead>
-            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">
-              <div className="flex items-center justify-end gap-2">
-                <DollarSign className="h-3.5 w-3.5" />
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-right whitespace-nowrap">
+              <div className="flex items-center justify-end gap-1 sm:gap-2">
+                <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Stake
               </div>
             </TableHead>
-            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Returns</TableHead>
-            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">
-              <div className="flex items-center justify-end gap-2">
-                <Clock className="h-3.5 w-3.5" />
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-right whitespace-nowrap">Returns</TableHead>
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-right whitespace-nowrap hidden sm:table-cell">
+              <div className="flex items-center justify-end gap-1 sm:gap-2">
+                <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Time
               </div>
             </TableHead>
-            <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Action</TableHead>
+            <TableHead className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-right whitespace-nowrap">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -91,25 +91,25 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
             return (
               <TableRow 
                 key={opp.id} 
-                className="hover-elevate cursor-pointer transition-all h-16 border-b"
+                className="hover-elevate cursor-pointer transition-all h-14 sm:h-16 border-b"
                 onClick={() => onClick?.(opp)}
                 data-testid={`row-opportunity-${opp.id}`}
               >
-                <TableCell className="font-bold text-sm" data-testid="cell-match">
-                  {opp.match}
+                <TableCell className="font-bold text-xs sm:text-sm max-w-[120px] sm:max-w-none" data-testid="cell-match">
+                  <div className="truncate">{opp.match}</div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="font-semibold text-xs">
+                  <Badge variant="outline" className="font-semibold text-[10px] sm:text-xs whitespace-nowrap">
                     {opp.sport}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5">
                     {opp.bookmakers.map((bm, idx) => (
                       <Badge 
                         key={idx} 
                         variant="secondary" 
-                        className="text-xs font-medium"
+                        className="text-[10px] sm:text-xs font-medium whitespace-nowrap"
                       >
                         {bm.name}
                       </Badge>
@@ -118,7 +118,7 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
                 </TableCell>
                 <TableCell className="text-right">
                   <div className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tabular-nums text-base",
+                    "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold tabular-nums text-sm sm:text-base whitespace-nowrap",
                     getProfitBgColor(opp.profit),
                     getProfitColor(opp.profit)
                   )} data-testid="cell-profit">
@@ -126,20 +126,20 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className="font-bold tabular-nums text-sm" data-testid="cell-stake">
+                  <span className="font-bold tabular-nums text-xs sm:text-sm whitespace-nowrap" data-testid="cell-stake">
                     ${totalStake.toFixed(2)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
                   <span className={cn(
-                    "font-bold tabular-nums text-sm",
+                    "font-bold tabular-nums text-xs sm:text-sm whitespace-nowrap",
                     getProfitColor(opp.profit)
                   )} data-testid="cell-returns">
                     ${guaranteedProfit.toFixed(2)}
                   </span>
                 </TableCell>
-                <TableCell className="text-right">
-                  <span className="text-xs text-muted-foreground font-medium tabular-nums" data-testid="cell-time">
+                <TableCell className="text-right hidden sm:table-cell">
+                  <span className="text-xs text-muted-foreground font-medium tabular-nums whitespace-nowrap" data-testid="cell-time">
                     {timeAgo(opp.timestamp)}
                   </span>
                 </TableCell>
@@ -151,11 +151,11 @@ export function OpportunitiesTable({ opportunities, onClick }: OpportunitiesTabl
                       e.stopPropagation();
                       onClick?.(opp);
                     }}
-                    className="gap-1.5 font-semibold"
+                    className="gap-1 sm:gap-1.5 font-semibold text-xs sm:text-sm"
                     data-testid="button-view-details"
                   >
-                    <DollarSign className="h-4 w-4" />
-                    View
+                    <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">View</span>
                   </Button>
                 </TableCell>
               </TableRow>
