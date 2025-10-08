@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { pgTable, text, integer, serial, timestamp, jsonb, boolean, decimal } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 
 // ============================================================================
 // CORE TYPES & SCHEMAS FOR ARBITRAGE SCANNER
@@ -261,3 +263,81 @@ export const settingsSchema = z.object({
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
+
+// ============================================================================
+// DRIZZLE DATABASE TABLES
+// ============================================================================
+
+// Settings table - stores user preferences and configuration
+export const settingsTable = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  apiKey: text("api_key"),
+  mockMode: boolean("mock_mode").default(false).notNull(),
+  cacheTimeout: integer("cache_timeout").default(60).notNull(),
+  autoRefreshInterval: integer("auto_refresh_interval").default(30).notNull(),
+  showMockData: boolean("show_mock_data").default(true).notNull(),
+  showLiveData: boolean("show_live_data").default(true).notNull(),
+  sports: jsonb("sports").$type<string[]>(),
+  bookmakerPreferences: jsonb("bookmaker_preferences").$type<string[]>(),
+  minEV: decimal("min_ev").default("1").notNull(),
+  notificationPreferences: jsonb("notification_preferences").$type<NotificationPreferences>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SettingsRow = typeof settingsTable.$inferSelect;
+export type InsertSettings = typeof settingsTable.$inferInsert;
+
+// Historical odds table - tracks odds changes over time
+export const historicalOddsTable = pgTable("historical_odds", {
+  id: serial("id").primaryKey(),
+  eventId: text("event_id").notNull(),
+  bookmaker: text("bookmaker").notNull(),
+  outcome: text("outcome").notNull(),
+  odds: decimal("odds").notNull(),
+  marketType: text("market_type"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type HistoricalOddsRow = typeof historicalOddsTable.$inferSelect;
+export type InsertHistoricalOddsRow = typeof historicalOddsTable.$inferInsert;
+
+// Bets table - tracks placed bets
+export const betsTable = pgTable("bets", {
+  id: serial("id").primaryKey(),
+  eventId: text("event_id").notNull(),
+  sport: text("sport").notNull(),
+  match: text("match").notNull(),
+  bookmakers: jsonb("bookmakers").$type<Array<{
+    name: string;
+    outcome: string;
+    odds: number;
+    stake: number;
+  }>>().notNull(),
+  status: text("status").$type<"pending" | "won" | "lost">().notNull(),
+  profit: decimal("profit").notNull(),
+  closingOdds: jsonb("closing_odds").$type<Array<{
+    bookmaker: string;
+    outcome: string;
+    odds: number;
+  }>>(),
+  clv: decimal("clv"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type BetRow = typeof betsTable.$inferSelect;
+export type InsertBetRow = typeof betsTable.$inferInsert;
+
+// Promos table - tracks bookmaker promotions
+export const promosTable = pgTable("promos", {
+  id: serial("id").primaryKey(),
+  bookmaker: text("bookmaker").notNull(),
+  type: text("type").$type<"deposit_bonus" | "free_bet" | "odds_boost" | "risk_free" | "other">().notNull(),
+  value: decimal("value").notNull(),
+  expiryDate: timestamp("expiry_date"),
+  notes: text("notes"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type PromoRow = typeof promosTable.$inferSelect;
+export type InsertPromoRow = typeof promosTable.$inferInsert;
