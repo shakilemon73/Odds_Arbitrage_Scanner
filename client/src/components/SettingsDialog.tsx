@@ -31,10 +31,12 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+  const [apiKey, setApiKey] = useState("");
 
   useEffect(() => {
     if (open) {
       loadSettings();
+      setApiKey(localStorage.getItem("oddsApiKey") || "");
     }
   }, [open]);
 
@@ -86,6 +88,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
       }
       
       localStorage.setItem("mockMode", mockMode.toString());
+      localStorage.setItem("oddsApiKey", apiKey);
       
       // Invalidate all odds queries to force immediate refetch with new settings
       // Use predicate to match any query key that starts with /api/odds
@@ -123,11 +126,30 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          <div className="p-4 rounded-lg bg-muted/50 border">
-            <p className="text-sm font-medium mb-1">API Key Configuration</p>
-            <p className="text-xs text-muted-foreground">
-              API key is securely configured via environment variable THE_ODDS_API_KEY. Contact your administrator to update the API key.
-            </p>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="api-key">The Odds API Key</Label>
+              <p className="text-xs text-muted-foreground">
+                Enter your API key from{" "}
+                <a 
+                  href="https://the-odds-api.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  the-odds-api.com
+                </a>
+              </p>
+            </div>
+            <Input
+              id="api-key"
+              type="password"
+              placeholder="Enter your API key"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              data-testid="input-api-key"
+              disabled={isLoadingSettings}
+            />
           </div>
 
           <div className="flex items-center justify-between gap-4">
