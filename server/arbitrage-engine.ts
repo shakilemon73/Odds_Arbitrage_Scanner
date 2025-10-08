@@ -403,3 +403,187 @@ export function validateArbitrage(opportunity: ArbitrageOpportunity): boolean {
   const firstProfit = profits[0];
   return profits.every(p => Math.abs(p - firstProfit) < 0.01);
 }
+
+/**
+ * Task 6: Calculate Market Hold Percentage
+ * Hold % = (sum of all implied probabilities - 100)
+ * Lower hold = better market (more efficient)
+ * 
+ * @param odds - Array of odds for all outcomes in a market
+ * @returns Hold percentage
+ */
+export function calculateMarketHold(odds: number[]): number {
+  const impliedProbabilities = odds.map(o => calculateImpliedProbability(o));
+  const totalImpliedProb = impliedProbabilities.reduce((sum, prob) => sum + prob, 0);
+  const hold = totalImpliedProb - 100;
+  return Math.round(hold * 100) / 100;
+}
+
+/**
+ * Task 5: Find Middle Opportunities
+ * A middle exists when there's a gap between lines where both bets can win
+ * For spreads: +7.5 at one book, -6.5 at another (win if result is exactly 7)
+ * For totals: Over 45.5 at one book, Under 47.5 at another (win if total is 46 or 47)
+ * 
+ * @param events - Array of events to analyze
+ * @returns Array of middle opportunities
+ */
+export function findMiddles(events: OddsApiEvent[]): ArbitrageOpportunity[] {
+  const middles: ArbitrageOpportunity[] = [];
+
+  for (const event of events) {
+    // Check spreads market for middles
+    const spreadsMarket = event.bookmakers[0]?.markets.find(m => m.key === 'spreads');
+    if (spreadsMarket && spreadsMarket.outcomes.length >= 2) {
+      const outcome1 = spreadsMarket.outcomes[0].name;
+      const outcome2 = spreadsMarket.outcomes[1].name;
+
+      // Find best spread lines for each team
+      let bestSpread1 = { bookmaker: '', odds: 0, line: 0 };
+      let bestSpread2 = { bookmaker: '', odds: 0, line: 0 };
+
+      for (const bookmaker of event.bookmakers) {
+        const market = bookmaker.markets.find(m => m.key === 'spreads');
+        if (!market) continue;
+
+        const out1 = market.outcomes.find(o => o.name === outcome1);
+        const out2 = market.outcomes.find(o => o.name === outcome2);
+
+        if (out1 && out1.price > bestSpread1.odds) {
+          bestSpread1 = { 
+            bookmaker: bookmaker.title, 
+            odds: out1.price,
+            line: parseFloat((out1 as any).point || '0')
+          };
+        }
+        if (out2 && out2.price > bestSpread2.odds) {
+          bestSpread2 = { 
+            bookmaker: bookmaker.title, 
+            odds: out2.price,
+            line: parseFloat((out2 as any).point || '0')
+          };
+        }
+      }
+
+      // Check if there's a middle opportunity (gap between lines)
+      if (bestSpread1.line > 0 && bestSpread2.line < 0 && 
+          Math.abs(bestSpread1.line + bestSpread2.line) >= 1) {
+        const gap = bestSpread1.line + bestSpread2.line;
+        const arbitrageCalc = calculateArbitrage([
+          { bookmaker: bestSpread1.bookmaker, outcome: outcome1, odds: bestSpread1.odds },
+          { bookmaker: bestSpread2.bookmaker, outcome: outcome2, odds: bestSpread2.odds }
+        ]);
+
+        middles.push({
+          id: `${event.id}-spreads-middle-${Date.now()}`,
+          sport: event.sport_title,
+          match: `${event.home_team} vs ${event.away_team}`,
+          bookmakers: [
+            {
+              name: bestSpread1.bookmaker,
+              outcome: `${outcome1} ${bestSpread1.line >= 0 ? '+' : ''}${bestSpread1.line}`,
+              odds: bestSpread1.odds,
+              stake: arbitrageCalc.stakes[0]
+            },
+            {
+              name: bestSpread2.bookmaker,
+              outcome: `${outcome2} ${bestSpread2.line >= 0 ? '+' : ''}${bestSpread2.line}`,
+              odds: bestSpread2.odds,
+              stake: arbitrageCalc.stakes[1]
+            }
+          ],
+          profit: arbitrageCalc.profitPercentage,
+          timestamp: new Date().toISOString(),
+          eventId: event.id,
+          commenceTime: event.commence_time,
+          isMiddle: true,
+          middleInfo: {
+            isMiddle: true,
+            line1: bestSpread1.line,
+            line2: bestSpread2.line,
+            winScenarios: [`Win both if margin is exactly ${Math.floor(Math.abs(gap))} points`]
+          },
+          marketType: 'spreads'
+        });
+      }
+    }
+
+    // Check totals market for middles
+    const totalsMarket = event.bookmakers[0]?.markets.find(m => m.key === 'totals');
+    if (totalsMarket && totalsMarket.outcomes.length >= 2) {
+      let bestOver = { bookmaker: '', odds: 0, line: 0 };
+      let bestUnder = { bookmaker: '', odds: 0, line: 0 };
+
+      for (const bookmaker of event.bookmakers) {
+        const market = bookmaker.markets.find(m => m.key === 'totals');
+        if (!market) continue;
+
+        const over = market.outcomes.find(o => o.name === 'Over');
+        const under = market.outcomes.find(o => o.name === 'Under');
+
+        if (over && over.price > bestOver.odds) {
+          bestOver = { 
+            bookmaker: bookmaker.title, 
+            odds: over.price,
+            line: parseFloat((over as any).point || '0')
+          };
+        }
+        if (under && under.price > bestUnder.odds) {
+          bestUnder = { 
+            bookmaker: bookmaker.title, 
+            odds: under.price,
+            line: parseFloat((under as any).point || '0')
+          };
+        }
+      }
+
+      // Check if there's a middle (gap between over and under lines)
+      if (bestOver.line > 0 && bestUnder.line > 0 && bestUnder.line - bestOver.line >= 1) {
+        const gap = bestUnder.line - bestOver.line;
+        const arbitrageCalc = calculateArbitrage([
+          { bookmaker: bestOver.bookmaker, outcome: 'Over', odds: bestOver.odds },
+          { bookmaker: bestUnder.bookmaker, outcome: 'Under', odds: bestUnder.odds }
+        ]);
+
+        const winningScores = [];
+        for (let i = Math.ceil(bestOver.line); i < bestUnder.line; i++) {
+          winningScores.push(i);
+        }
+
+        middles.push({
+          id: `${event.id}-totals-middle-${Date.now()}`,
+          sport: event.sport_title,
+          match: `${event.home_team} vs ${event.away_team}`,
+          bookmakers: [
+            {
+              name: bestOver.bookmaker,
+              outcome: `Over ${bestOver.line}`,
+              odds: bestOver.odds,
+              stake: arbitrageCalc.stakes[0]
+            },
+            {
+              name: bestUnder.bookmaker,
+              outcome: `Under ${bestUnder.line}`,
+              odds: bestUnder.odds,
+              stake: arbitrageCalc.stakes[1]
+            }
+          ],
+          profit: arbitrageCalc.profitPercentage,
+          timestamp: new Date().toISOString(),
+          eventId: event.id,
+          commenceTime: event.commence_time,
+          isMiddle: true,
+          middleInfo: {
+            isMiddle: true,
+            line1: bestOver.line,
+            line2: bestUnder.line,
+            winScenarios: [`Win both if total is: ${winningScores.join(', ')}`]
+          },
+          marketType: 'totals'
+        });
+      }
+    }
+  }
+
+  return middles.sort((a, b) => b.profit - a.profit);
+}

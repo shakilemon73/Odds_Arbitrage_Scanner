@@ -181,6 +181,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========================================
+  // Task 5: GET /api/middles - Fetch middle opportunities
+  // ========================================
+  app.get("/api/middles", async (req, res) => {
+    try {
+      const { findMiddles } = await import('./arbitrage-engine');
+      
+      // Get settings to determine data sources
+      const settings = await storage.getSettings();
+      const apiKey = process.env.THE_ODDS_API_KEY;
+      
+      // Map general sport categories to specific leagues
+      const sportInputs = req.query.sports 
+        ? (typeof req.query.sports === 'string' ? req.query.sports.split(',') : req.query.sports)
+        : ["upcoming"];
+      const sports = (sportInputs as string[]).flatMap(mapSportInputToLeagues);
+      const uniqueSports = Array.from(new Set(sports)) as Sport[];
+      
+      let allEvents: any[] = [];
+      
+      // Fetch events from enabled sources
+      if (settings.showMockData) {
+        const mockProvider = new (await import('./odds-provider')).MockOddsProvider();
+        const mockResult = await mockProvider.fetchOdds(uniqueSports);
+        allEvents.push(...mockResult.events);
+      }
+      
+      if (settings.showLiveData && apiKey && !settings.mockMode) {
+        try {
+          const liveProvider = createOddsProvider(apiKey, false);
+          const liveResult = await liveProvider.fetchOdds(uniqueSports);
+          allEvents.push(...liveResult.events);
+        } catch (error) {
+          console.error(`[API] Error fetching live data for middles:`, error);
+        }
+      }
+      
+      const middles = findMiddles(allEvents);
+      
+      res.json({
+        opportunities: middles,
+        count: middles.length,
+        cachedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("[API] Error in /api/middles:", error);
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  // ========================================
+  // Task 8: GET /api/positive-ev - Fetch +EV opportunities
+  // ========================================
+  app.get("/api/positive-ev", async (req, res) => {
+    try {
+      const { findPositiveEVOpportunities } = await import('./arbitrage-engine');
+      
+      const minEV = req.query.minEV ? parseFloat(req.query.minEV as string) : 2;
+      
+      // Get settings to determine data sources
+      const settings = await storage.getSettings();
+      const apiKey = process.env.THE_ODDS_API_KEY;
+      
+      // Map general sport categories to specific leagues
+      const sportInputs = req.query.sports 
+        ? (typeof req.query.sports === 'string' ? req.query.sports.split(',') : req.query.sports)
+        : ["upcoming"];
+      const sports = (sportInputs as string[]).flatMap(mapSportInputToLeagues);
+      const uniqueSports = Array.from(new Set(sports)) as Sport[];
+      
+      let allEvents: any[] = [];
+      
+      // Fetch events from enabled sources
+      if (settings.showMockData) {
+        const mockProvider = new (await import('./odds-provider')).MockOddsProvider();
+        const mockResult = await mockProvider.fetchOdds(uniqueSports);
+        allEvents.push(...mockResult.events);
+      }
+      
+      if (settings.showLiveData && apiKey && !settings.mockMode) {
+        try {
+          const liveProvider = createOddsProvider(apiKey, false);
+          const liveResult = await liveProvider.fetchOdds(uniqueSports);
+          allEvents.push(...liveResult.events);
+        } catch (error) {
+          console.error(`[API] Error fetching live data for +EV:`, error);
+        }
+      }
+      
+      const positiveEVOpps = findPositiveEVOpportunities(allEvents, minEV);
+      
+      res.json({
+        opportunities: positiveEVOpps,
+        count: positiveEVOpps.length,
+        cachedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("[API] Error in /api/positive-ev:", error);
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  // ========================================
   // GET /healthz - Health check (spec requirement)
   // ========================================
   app.get("/healthz", async (req, res) => {
@@ -292,6 +398,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       oddsCache.clear();
       res.json({ message: "Cache cleared successfully" });
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  // ========================================
+  // Task 7: Historical Odds Endpoints
+  // ========================================
+  app.get("/api/historical-odds/:eventId", async (req, res) => {
+    try {
+      const { eventId } = req.params;
+      const historicalOdds = await storage.getHistoricalOdds(eventId);
+      res.json(historicalOdds);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  // ========================================
+  // Task 12: Bet Tracking Endpoints
+  // ========================================
+  app.get("/api/bets", async (req, res) => {
+    try {
+      const bets = await storage.getBets();
+      res.json(bets);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.get("/api/bets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const bet = await storage.getBet(id);
+      if (!bet) {
+        return res.status(404).json({ message: "Bet not found" });
+      }
+      res.json(bet);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.post("/api/bets", async (req, res) => {
+    try {
+      const bet = await storage.saveBet(req.body);
+      res.status(201).json(bet);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.patch("/api/bets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const bet = await storage.updateBet(id, req.body);
+      res.json(bet);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.delete("/api/bets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteBet(id);
+      res.json({ message: "Bet deleted successfully" });
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  // ========================================
+  // Task 14: Promo Tracking Endpoints
+  // ========================================
+  app.get("/api/promos", async (req, res) => {
+    try {
+      const promos = await storage.getPromos();
+      res.json(promos);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.get("/api/promos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const promo = await storage.getPromo(id);
+      if (!promo) {
+        return res.status(404).json({ message: "Promo not found" });
+      }
+      res.json(promo);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.post("/api/promos", async (req, res) => {
+    try {
+      const promo = await storage.savePromo(req.body);
+      res.status(201).json(promo);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.patch("/api/promos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const promo = await storage.updatePromo(id, req.body);
+      res.json(promo);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.delete("/api/promos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deletePromo(id);
+      res.json({ message: "Promo deleted successfully" });
     } catch (error) {
       res.status(500).json({
         message: error instanceof Error ? error.message : "Internal server error",

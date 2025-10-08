@@ -24,6 +24,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [autoRefreshInterval, setAutoRefreshInterval] = useState(30);
   const [showMockData, setShowMockData] = useState(true);
   const [showLiveData, setShowLiveData] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationProfitThreshold, setNotificationProfitThreshold] = useState(2);
+  const [notificationSoundEnabled, setNotificationSoundEnabled] = useState(false);
+  const [minEVPercentage, setMinEVPercentage] = useState(2);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
@@ -44,6 +48,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         setMockMode(settings.mockMode || false);
         setShowMockData(settings.showMockData ?? true);
         setShowLiveData(settings.showLiveData ?? true);
+        setNotificationsEnabled(settings.notificationsEnabled || false);
+        setNotificationProfitThreshold(settings.notificationProfitThreshold || 2);
+        setNotificationSoundEnabled(settings.notificationSoundEnabled || false);
+        setMinEVPercentage(settings.minEVPercentage || 2);
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -65,7 +73,11 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
           mockMode,
           autoRefreshInterval,
           showMockData,
-          showLiveData 
+          showLiveData,
+          notificationsEnabled,
+          notificationProfitThreshold,
+          notificationSoundEnabled,
+          minEVPercentage
         }),
       });
       
@@ -192,6 +204,92 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
                 data-testid="switch-show-live"
                 aria-label="Toggle live data display"
               />
+            </div>
+          </div>
+
+          {/* Task 11: Notification Settings */}
+          <div className="space-y-4 pt-2 border-t">
+            <Label className="text-base">Notifications</Label>
+            
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="notifications-enabled">Enable Notifications</Label>
+                <p className="text-xs text-muted-foreground">
+                  Get alerted when new opportunities appear
+                </p>
+              </div>
+              <Switch
+                id="notifications-enabled"
+                checked={notificationsEnabled}
+                onCheckedChange={async (checked) => {
+                  if (checked && Notification.permission !== "granted") {
+                    await Notification.requestPermission();
+                  }
+                  setNotificationsEnabled(checked);
+                }}
+                data-testid="switch-notifications"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="notification-threshold">Min Profit Threshold</Label>
+                <span className="text-sm font-medium text-muted-foreground">
+                  {notificationProfitThreshold}%
+                </span>
+              </div>
+              <Slider
+                id="notification-threshold"
+                min={1}
+                max={10}
+                step={0.5}
+                value={[notificationProfitThreshold]}
+                onValueChange={(value) => setNotificationProfitThreshold(value[0])}
+                data-testid="slider-notification-threshold"
+                disabled={!notificationsEnabled}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="notification-sound">Notification Sound</Label>
+                <p className="text-xs text-muted-foreground">
+                  Play sound with notifications
+                </p>
+              </div>
+              <Switch
+                id="notification-sound"
+                checked={notificationSoundEnabled}
+                onCheckedChange={setNotificationSoundEnabled}
+                data-testid="switch-notification-sound"
+                disabled={!notificationsEnabled}
+              />
+            </div>
+          </div>
+
+          {/* Task 8: +EV Settings */}
+          <div className="space-y-4 pt-2 border-t">
+            <Label className="text-base">+EV Opportunities</Label>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="min-ev">Minimum EV%</Label>
+                <span className="text-sm font-medium text-muted-foreground">
+                  {minEVPercentage}%
+                </span>
+              </div>
+              <Slider
+                id="min-ev"
+                min={0}
+                max={10}
+                step={0.5}
+                value={[minEVPercentage]}
+                onValueChange={(value) => setMinEVPercentage(value[0])}
+                data-testid="slider-min-ev"
+              />
+              <p className="text-xs text-muted-foreground">
+                Only show +EV bets above this threshold
+              </p>
             </div>
           </div>
 

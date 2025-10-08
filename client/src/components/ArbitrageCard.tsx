@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,11 @@ import {
   Percent,
   Wifi,
   Database,
-  TestTube
+  TestTube,
+  LineChart as LineChartIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import LineMovementChart from "./LineMovementChart";
 
 export interface ArbitrageOpportunity {
   id: string;
@@ -30,10 +33,23 @@ export interface ArbitrageOpportunity {
     outcome: string;
     odds: number;
     stake: number;
+    ev?: number;
+    evDollars?: number;
   }[];
   profit: number;
   timestamp: string;
+  eventId?: string;
   dataSource?: "live" | "mock" | "cached";
+  hold?: number;
+  isMiddle?: boolean;
+  middleInfo?: {
+    isMiddle: boolean;
+    line1?: number;
+    line2?: number;
+    winScenarios?: string[];
+  };
+  isPositiveEV?: boolean;
+  marketType?: "h2h" | "spreads" | "totals";
 }
 
 interface ArbitrageCardProps {
@@ -42,6 +58,7 @@ interface ArbitrageCardProps {
 }
 
 export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardProps) {
+  const [lineMovementOpen, setLineMovementOpen] = useState(false);
   const profitLevel = opportunity.profit >= 3 ? "high" : opportunity.profit >= 1 ? "medium" : "low";
   
   const getSportIcon = (sport: string) => {
@@ -187,13 +204,60 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
               <p className="text-xs sm:text-sm text-muted-foreground font-semibold">{opportunity.sport}</p>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0 self-start sm:self-auto">
-            {getDataSourceBadge()}
+          <div className="flex flex-col items-start gap-2 shrink-0 self-start">
+            <div className="flex flex-wrap items-center gap-2">
+              {getDataSourceBadge()}
+              {/* Task 6: Low Hold Badge */}
+              {opportunity.hold !== undefined && opportunity.hold < 2 && (
+                <Badge
+                  variant="outline"
+                  className="gap-1.5 !h-7 border-2 bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/30"
+                  data-testid="badge-low-hold"
+                >
+                  <Shield className="h-3 w-3" />
+                  <span className="text-xs font-semibold">Low Hold</span>
+                </Badge>
+              )}
+              {/* Task 5: Middle Badge */}
+              {opportunity.isMiddle && (
+                <Badge
+                  variant="outline"
+                  className="gap-1.5 !h-7 border-2 bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30"
+                  data-testid="badge-middle"
+                >
+                  <TrendingUp className="h-3 w-3" />
+                  <span className="text-xs font-semibold">Middle</span>
+                </Badge>
+              )}
+              {/* Task 8: +EV Badge - show for high EV */}
+              {opportunity.bookmakers.some(b => (b.ev || 0) > 5) && (
+                <Badge
+                  variant="outline"
+                  className="gap-1.5 !h-7 border-2 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                  data-testid="badge-high-ev"
+                >
+                  <Zap className="h-3 w-3" />
+                  <span className="text-xs font-semibold">High +EV</span>
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" aria-hidden="true" />
               <span className="text-xs text-muted-foreground font-medium tabular-nums" data-testid="text-timestamp">
                 {timeAgo()}
               </span>
+              {/* Task 6: Show Hold % */}
+              {opportunity.hold !== undefined && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <span className={cn(
+                    "text-xs font-semibold tabular-nums",
+                    opportunity.hold < 2 ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground"
+                  )} data-testid="text-hold">
+                    {opportunity.hold.toFixed(2)}% hold
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -283,6 +347,19 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
                     </p>
                   </div>
                   
+                  {/* Task 8: Show +EV% */}
+                  {bookmaker.ev !== undefined && bookmaker.ev > 0 && (
+                    <div className="text-left sm:text-right">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-bold">EV</p>
+                      <p className={cn(
+                        "text-sm sm:text-base font-bold tabular-nums",
+                        bookmaker.ev > 5 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                      )} data-testid="text-ev">
+                        +{bookmaker.ev.toFixed(2)}%
+                      </p>
+                    </div>
+                  )}
+                  
                   <ArrowRight className="hidden sm:block h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   
                   <div className="text-left sm:text-right">
@@ -297,8 +374,26 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
           </div>
         </div>
 
+        {/* Task 5: Middle Win Scenarios */}
+        {opportunity.isMiddle && opportunity.middleInfo?.winScenarios && (
+          <div className="p-3 sm:p-4 rounded-lg bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/30">
+            <h4 className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 flex items-center gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5" />
+              Middle Opportunity - Win Both Bets!
+            </h4>
+            <ul className="space-y-1">
+              {opportunity.middleInfo.winScenarios.map((scenario, idx) => (
+                <li key={idx} className="text-xs text-purple-700 dark:text-purple-300 flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>{scenario}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Action Indicator */}
-        <div className="flex items-center justify-center pt-1 sm:pt-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 pt-1 sm:pt-2">
           <Button
             variant="ghost"
             size="sm"
@@ -307,12 +402,39 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
               e.stopPropagation();
               onClick?.();
             }}
+            data-testid="button-view-details"
           >
             View Full Details
             <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 transition-transform group-hover/btn:translate-x-1" />
           </Button>
+          
+          {opportunity.eventId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-xs sm:text-sm font-semibold w-full sm:w-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLineMovementOpen(true);
+              }}
+              data-testid="button-view-line-movement"
+            >
+              <LineChartIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              View Line Movement
+            </Button>
+          )}
         </div>
       </CardContent>
+
+      {/* Line Movement Chart Dialog */}
+      {opportunity.eventId && (
+        <LineMovementChart
+          eventId={opportunity.eventId}
+          matchName={opportunity.match}
+          open={lineMovementOpen}
+          onOpenChange={setLineMovementOpen}
+        />
+      )}
     </Card>
   );
 }

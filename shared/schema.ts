@@ -16,6 +16,20 @@ export const bookmakerOddsSchema = z.object({
 
 export type BookmakerOdds = z.infer<typeof bookmakerOddsSchema>;
 
+// Market types (defined before use)
+export const marketTypeSchema = z.enum(["h2h", "spreads", "totals"]);
+export type MarketType = z.infer<typeof marketTypeSchema>;
+
+// Middle opportunity info
+export const middleInfoSchema = z.object({
+  isMiddle: z.boolean(),
+  line1: z.number().optional(),
+  line2: z.number().optional(),
+  winScenarios: z.array(z.string()).optional(),
+});
+
+export type MiddleInfo = z.infer<typeof middleInfoSchema>;
+
 // Arbitrage opportunity
 export const arbitrageOpportunitySchema = z.object({
   id: z.string(),
@@ -27,6 +41,11 @@ export const arbitrageOpportunitySchema = z.object({
   eventId: z.string().optional(),
   commenceTime: z.string().optional(),
   dataSource: z.enum(["live", "mock", "cached"]).optional(),
+  hold: z.number().optional(), // Task 6: Market hold percentage
+  isMiddle: z.boolean().optional(), // Task 5: Is this a middle opportunity
+  middleInfo: middleInfoSchema.optional(), // Task 5: Middle details
+  isPositiveEV: z.boolean().optional(), // Task 8: Is this +EV
+  marketType: marketTypeSchema.optional(), // h2h, spreads, or totals
 });
 
 export type ArbitrageOpportunity = z.infer<typeof arbitrageOpportunitySchema>;
@@ -104,10 +123,6 @@ export type GeneralSport = z.infer<typeof generalSportSchema>;
 export const sportInputSchema = z.union([sportSchema, generalSportSchema]);
 export type SportInput = z.infer<typeof sportInputSchema>;
 
-// Market types
-export const marketTypeSchema = z.enum(["h2h", "spreads", "totals"]);
-export type MarketType = z.infer<typeof marketTypeSchema>;
-
 // API request/response schemas
 export const getOddsRequestSchema = z.object({
   sports: z.array(sportInputSchema).optional(),
@@ -139,6 +154,78 @@ export const healthCheckResponseSchema = z.object({
 
 export type HealthCheckResponse = z.infer<typeof healthCheckResponseSchema>;
 
+// Historical odds tracking (Task 7)
+export const historicalOddsSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  bookmaker: z.string(),
+  outcome: z.string(),
+  odds: z.number(),
+  timestamp: z.string(),
+  marketType: marketTypeSchema.optional(),
+});
+
+export type HistoricalOdds = z.infer<typeof historicalOddsSchema>;
+
+export const insertHistoricalOddsSchema = historicalOddsSchema.omit({ id: true });
+export type InsertHistoricalOdds = z.infer<typeof insertHistoricalOddsSchema>;
+
+// Bet tracking (Task 12)
+export const betSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  sport: z.string(),
+  match: z.string(),
+  bookmakers: z.array(z.object({
+    name: z.string(),
+    outcome: z.string(),
+    odds: z.number(),
+    stake: z.number(),
+  })),
+  status: z.enum(["pending", "won", "lost"]),
+  profit: z.number(),
+  timestamp: z.string(),
+  closingOdds: z.array(z.object({
+    bookmaker: z.string(),
+    outcome: z.string(),
+    odds: z.number(),
+  })).optional(),
+  clv: z.number().optional(), // Closing Line Value
+});
+
+export type Bet = z.infer<typeof betSchema>;
+
+export const insertBetSchema = betSchema.omit({ id: true });
+export type InsertBet = z.infer<typeof insertBetSchema>;
+
+// Promo tracking (Task 14)
+export const promoTypeSchema = z.enum(["deposit_bonus", "free_bet", "odds_boost", "risk_free", "other"]);
+export type PromoType = z.infer<typeof promoTypeSchema>;
+
+export const promoSchema = z.object({
+  id: z.string(),
+  bookmaker: z.string(),
+  type: promoTypeSchema,
+  value: z.number(), // Dollar value or percentage
+  expiryDate: z.string().optional(),
+  notes: z.string().optional(),
+  timestamp: z.string(),
+});
+
+export type Promo = z.infer<typeof promoSchema>;
+
+export const insertPromoSchema = promoSchema.omit({ id: true, timestamp: true });
+export type InsertPromo = z.infer<typeof insertPromoSchema>;
+
+// Notification preferences (Task 11)
+export const notificationPreferencesSchema = z.object({
+  enabled: z.boolean().default(false),
+  minProfit: z.number().min(0).max(100).default(2),
+  sound: z.boolean().default(true),
+});
+
+export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
+
 // Settings/Configuration
 export const settingsSchema = z.object({
   apiKey: z.string().optional(),
@@ -148,6 +235,9 @@ export const settingsSchema = z.object({
   showMockData: z.boolean().default(true),
   showLiveData: z.boolean().default(true),
   sports: z.array(sportSchema).optional(),
+  bookmakerPreferences: z.array(z.string()).optional(), // Task 9: Enabled bookmakers
+  minEV: z.number().min(0).max(100).default(1), // Task 8: Minimum EV filter
+  notificationPreferences: notificationPreferencesSchema.optional(), // Task 11
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

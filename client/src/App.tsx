@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -9,8 +9,14 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Dashboard from "@/pages/Dashboard";
+import BetTracker from "@/pages/BetTracker";
+import PromoConverter from "@/pages/PromoConverter";
 import NotFound from "@/pages/not-found";
 import SettingsDialog from "@/components/SettingsDialog";
+import ThemeToggle from "@/components/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Target, Gift, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { BookmakerWithCount } from "@/components/FilterBar";
 import type { ArbitrageOpportunity } from "@/components/ArbitrageCard";
 
@@ -158,11 +164,61 @@ function DashboardWrapper() {
 }
 
 function Router() {
+  const [location] = useLocation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  
+  const navItems = [
+    { path: "/", label: "Scanner", icon: TrendingUp },
+    { path: "/bets", label: "Bet Tracker", icon: Target },
+    { path: "/promos", label: "Promos", icon: Gift },
+  ];
+
   return (
-    <Switch>
-      <Route path="/" component={DashboardWrapper} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <div className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold">DELLTA</span>
+            </div>
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => (
+                <Link key={item.path} href={item.path}>
+                  <Button
+                    variant={location === item.path ? "secondary" : "ghost"}
+                    size="sm"
+                    className={cn("gap-2", location === item.path && "bg-primary/10 text-primary")}
+                    data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Button>
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSettingsOpen(true)}
+              data-testid="button-settings"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+      <Switch>
+        <Route path="/" component={DashboardWrapper} />
+        <Route path="/bets" component={BetTracker} />
+        <Route path="/promos" component={PromoConverter} />
+        <Route component={NotFound} />
+      </Switch>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </>
   );
 }
 
