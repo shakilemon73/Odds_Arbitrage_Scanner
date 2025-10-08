@@ -56,6 +56,27 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
+  // Setup automatic cleanup job - runs every hour
+  const { storage } = await import("./storage");
+  
+  const runCleanup = async () => {
+    try {
+      const deletedCount = await storage.cleanupOldEvents();
+      if (deletedCount > 0) {
+        log(`[Auto-Cleanup] Removed ${deletedCount} old events`);
+      }
+    } catch (error) {
+      console.error("[Auto-Cleanup] Error:", error);
+    }
+  };
+
+  // Run cleanup immediately on startup
+  runCleanup();
+  
+  // Then run every hour (3600000 ms)
+  setInterval(runCleanup, 3600000);
+  log("[Auto-Cleanup] Scheduled to run every hour");
+
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.

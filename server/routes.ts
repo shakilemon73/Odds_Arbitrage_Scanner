@@ -188,6 +188,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const liveProvider = createOddsProvider(apiKey, false);
           const liveResult = await liveProvider.fetchOdds(uniqueSports);
+          
+          // Save events to database
+          console.log(`[API] Saving ${liveResult.events.length} events to database...`);
+          for (const event of liveResult.events) {
+            try {
+              await storage.saveEvent({
+                eventId: event.id,
+                sportKey: event.sport_key,
+                sportTitle: event.sport_title,
+                homeTeam: event.home_team,
+                awayTeam: event.away_team,
+                commenceTime: event.commence_time,
+                bookmakers: event.bookmakers,
+              });
+            } catch (saveError) {
+              console.error(`[API] Error saving event ${event.id}:`, saveError);
+            }
+          }
+          console.log(`[API] Events saved to database`);
+          
           const liveOpportunities = findAllArbitrageOpportunities(
             liveResult.events,
             validated.minProfit || 0
@@ -609,6 +629,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       await storage.deletePromo(id);
       res.json({ message: "Promo deleted successfully" });
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  // ========================================
+  // Event Storage Endpoints
+  // ========================================
+  app.get("/api/events", async (req, res) => {
+    try {
+      const thisWeekOnly = req.query.thisWeekOnly === 'true';
+      const events = await storage.getEvents({ thisWeekOnly });
+      res.json({
+        events,
+        count: events.length,
+        thisWeekOnly,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  app.get("/api/events/:eventId", async (req, res) => {
+    try {
+      const { eventId } = req.params;
+      const event = await storage.getEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  // ========================================
+  // Cleanup Endpoint - Remove old events
+  // ========================================
+  app.post("/api/cleanup", async (req, res) => {
+    try {
+      const deletedCount = await storage.cleanupOldEvents();
+      res.json({
+        message: "Cleanup completed successfully",
+        deletedCount,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
       res.status(500).json({
         message: error instanceof Error ? error.message : "Internal server error",
