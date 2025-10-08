@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LineMovementChart from "./LineMovementChart";
+import GameStatusBadge from "./GameStatusBadge";
+import { isStartingSoon } from "@/lib/timeUtils";
 
 export interface ArbitrageOpportunity {
   id: string;
@@ -39,6 +41,7 @@ export interface ArbitrageOpportunity {
   profit: number;
   timestamp: string;
   eventId?: string;
+  commenceTime?: string;
   dataSource?: "live" | "mock" | "cached";
   hold?: number;
   isMiddle?: boolean;
@@ -60,6 +63,7 @@ interface ArbitrageCardProps {
 export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardProps) {
   const [lineMovementOpen, setLineMovementOpen] = useState(false);
   const profitLevel = opportunity.profit >= 3 ? "high" : opportunity.profit >= 1 ? "medium" : "low";
+  const startingSoon = isStartingSoon(opportunity.commenceTime);
   
   const getSportIcon = (sport: string) => {
     const sportLower = sport.toLowerCase();
@@ -168,7 +172,8 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
       className={cn(
         "group relative overflow-hidden hover-elevate active-elevate-2 cursor-pointer transition-all duration-300",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        "border-2 border-card-border hover:border-primary/30"
+        "border-2 border-card-border hover:border-primary/30",
+        startingSoon && "border-primary/50 shadow-lg shadow-primary/20"
       )}
       onClick={onClick}
       onKeyDown={handleKeyDown}
@@ -206,6 +211,7 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
           </div>
           <div className="flex flex-col items-start gap-2 shrink-0 self-start">
             <div className="flex flex-wrap items-center gap-2">
+              <GameStatusBadge commenceTime={opportunity.commenceTime} />
               {getDataSourceBadge()}
               {/* Task 6: Low Hold Badge */}
               {opportunity.hold !== undefined && opportunity.hold < 2 && (

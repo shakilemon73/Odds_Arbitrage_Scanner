@@ -8,13 +8,73 @@ import {
   type Sport,
   type SportInput,
   type GetOddsResponse,
-  type HealthCheckResponse 
+  type HealthCheckResponse,
+  type TimeFilter 
 } from "@shared/schema";
 import { z } from "zod";
 
 // ============================================================================
 // SPORT CATEGORY MAPPING
 // ============================================================================
+
+/**
+ * Filters opportunities by time range based on commence_time
+ */
+function filterByTimeRange(opportunities: any[], timeFilter?: TimeFilter): any[] {
+  if (!timeFilter || timeFilter === "all") {
+    return opportunities;
+  }
+  
+  const now = new Date();
+  let endTime: Date;
+  
+  switch (timeFilter) {
+    case "5min":
+      endTime = new Date(now.getTime() + 5 * 60 * 1000);
+      break;
+    case "10min":
+      endTime = new Date(now.getTime() + 10 * 60 * 1000);
+      break;
+    case "30min":
+      endTime = new Date(now.getTime() + 30 * 60 * 1000);
+      break;
+    case "1hr":
+      endTime = new Date(now.getTime() + 60 * 60 * 1000);
+      break;
+    case "6hr":
+      endTime = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+      break;
+    case "12hr":
+      endTime = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+      break;
+    case "24hr":
+      endTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      break;
+    case "tomorrow":
+      endTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+      break;
+    case "week":
+      endTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      return opportunities;
+  }
+  
+  return opportunities.filter(opp => {
+    if (!opp.commenceTime) return false;
+    
+    const gameTime = new Date(opp.commenceTime);
+    
+    // Include live games (started but < 3 hours ago)
+    const hoursUntilStart = (gameTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    if (hoursUntilStart < 0 && hoursUntilStart > -3) {
+      return true;
+    }
+    
+    // Include games that start before the end time
+    return gameTime < endTime && gameTime > now;
+  });
+}
 
 /**
  * Maps general sport categories to their specific league codes
@@ -83,6 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookmakers: req.query.bookmakers
           ? (typeof req.query.bookmakers === 'string' ? req.query.bookmakers.split(',') : req.query.bookmakers)
           : undefined,
+        timeFilter: req.query.timeFilter as TimeFilter | undefined,
       };
 
       // Validate with Zod
@@ -91,10 +152,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get settings to determine data sources
       const settings = await storage.getSettings();
       
-      // Get API key from environment variable only (secure)
-      const apiKey = process.env.THE_ODDS_API_KEY;
+      // Get API key from request header or environment variable
+      const headerApiKey = req.headers['x-api-key'] as string | undefined;
+      const envApiKey = process.env.THE_ODDS_API_KEY;
+      const apiKey = headerApiKey || envApiKey;
       
-      console.log(`[API] API Key source: ${apiKey ? 'environment' : 'none'}`);
+      console.log(`[API] API Key source: ${headerApiKey ? 'header' : envApiKey ? 'environment' : 'none'}`);
       console.log(`[API] Show Mock: ${settings.showMockData}, Show Live: ${settings.showLiveData}`);
       
       // Map general sport categories to specific leagues
@@ -152,6 +215,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+      // Filter by time range if specified
+      filteredOpportunities = filterByTimeRange(filteredOpportunities, validated.timeFilter);
+
       // Cache opportunities in storage
       await storage.setCachedOpportunities(filteredOpportunities);
 
@@ -189,7 +255,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get settings to determine data sources
       const settings = await storage.getSettings();
-      const apiKey = process.env.THE_ODDS_API_KEY;
+      const headerApiKey = req.headers['x-api-key'] as string | undefined;
+      const apiKey = headerApiKey || process.env.THE_ODDS_API_KEY;
       
       // Map general sport categories to specific leagues
       const sportInputs = req.query.sports 
@@ -243,7 +310,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get settings to determine data sources
       const settings = await storage.getSettings();
-      const apiKey = process.env.THE_ODDS_API_KEY;
+      const headerApiKey = req.headers['x-api-key'] as string | undefined;
+      const apiKey = headerApiKey || process.env.THE_ODDS_API_KEY;
       
       // Map general sport categories to specific leagues
       const sportInputs = req.query.sports 

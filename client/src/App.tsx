@@ -32,6 +32,7 @@ function DashboardWrapper() {
   const [selectedSport, setSelectedSport] = useState("all");
   const [selectedBookmakers, setSelectedBookmakers] = useState<string[]>([]);
   const [minProfit, setMinProfit] = useState(0);
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState("all");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { data: settings } = useQuery({
@@ -54,6 +55,10 @@ function DashboardWrapper() {
     
     if (selectedBookmakers.length > 0) {
       params.append("bookmakers", selectedBookmakers.join(","));
+    }
+    
+    if (selectedTimeFilter !== "all") {
+      params.append("timeFilter", selectedTimeFilter);
     }
     
     const queryString = params.toString();
@@ -120,6 +125,7 @@ function DashboardWrapper() {
     setSelectedSport("all");
     setSelectedBookmakers([]);
     setMinProfit(0);
+    setSelectedTimeFilter("all");
   };
 
   const style = {
@@ -134,10 +140,12 @@ function DashboardWrapper() {
           selectedSport={selectedSport}
           selectedBookmakers={selectedBookmakers}
           minProfit={minProfit}
+          selectedTimeFilter={selectedTimeFilter}
           availableBookmakers={availableBookmakers}
           onSportChange={setSelectedSport}
           onBookmakerToggle={handleBookmakerToggle}
           onMinProfitChange={setMinProfit}
+          onTimeFilterChange={setSelectedTimeFilter}
           onClearFilters={handleClearFilters}
           onSettingsClick={() => setSettingsOpen(true)}
         />
@@ -149,10 +157,12 @@ function DashboardWrapper() {
             selectedSport={selectedSport}
             selectedBookmakers={selectedBookmakers}
             minProfit={minProfit}
+            selectedTimeFilter={selectedTimeFilter}
             availableBookmakers={availableBookmakers}
             onSportChange={setSelectedSport}
             onBookmakerToggle={handleBookmakerToggle}
             onMinProfitChange={setMinProfit}
+            onTimeFilterChange={setSelectedTimeFilter}
             onClearFilters={handleClearFilters}
             onSettingsClick={() => setSettingsOpen(true)}
           />

@@ -20,6 +20,25 @@ export type BookmakerOdds = z.infer<typeof bookmakerOddsSchema>;
 export const marketTypeSchema = z.enum(["h2h", "spreads", "totals"]);
 export type MarketType = z.infer<typeof marketTypeSchema>;
 
+// Time filter types for filtering opportunities by start time
+export const timeFilterSchema = z.enum([
+  "all",
+  "5min",
+  "10min",
+  "30min",
+  "1hr",
+  "6hr",
+  "12hr",
+  "24hr",
+  "tomorrow",
+  "week"
+]);
+export type TimeFilter = z.infer<typeof timeFilterSchema>;
+
+// Game status based on commence time
+export const gameStatusSchema = z.enum(["live", "starting-soon", "upcoming"]);
+export type GameStatus = z.infer<typeof gameStatusSchema>;
+
 // Middle opportunity info
 export const middleInfoSchema = z.object({
   isMiddle: z.boolean(),
@@ -128,6 +147,7 @@ export const getOddsRequestSchema = z.object({
   sports: z.array(sportInputSchema).optional(),
   minProfit: z.number().min(0).max(100).optional(),
   bookmakers: z.array(z.string()).optional(),
+  timeFilter: timeFilterSchema.optional(),
 });
 
 export type GetOddsRequest = z.infer<typeof getOddsRequestSchema>;

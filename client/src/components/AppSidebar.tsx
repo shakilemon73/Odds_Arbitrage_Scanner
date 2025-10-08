@@ -22,7 +22,8 @@ import {
   X,
   Sparkles,
   ChevronRight,
-  Percent
+  Percent,
+  Clock
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,14 +42,29 @@ const SPORTS = [
   { value: "mma", label: "MMA", Icon: Dumbbell, description: "UFC & more" },
 ];
 
+const TIME_FILTERS = [
+  { value: "all", label: "All Times", description: "Show all games" },
+  { value: "5min", label: "Next 5 Minutes", description: "Games starting soon" },
+  { value: "10min", label: "Next 10 Minutes", description: "Very soon" },
+  { value: "30min", label: "Next 30 Minutes", description: "Starting soon" },
+  { value: "1hr", label: "Next Hour", description: "Within an hour" },
+  { value: "6hr", label: "Next 6 Hours", description: "Today's games" },
+  { value: "12hr", label: "Next 12 Hours", description: "Half day" },
+  { value: "24hr", label: "Next 24 Hours", description: "Tomorrow" },
+  { value: "tomorrow", label: "Tomorrow", description: "Next 48 hours" },
+  { value: "week", label: "This Week", description: "Next 7 days" },
+];
+
 interface AppSidebarProps {
   selectedSport: string;
   selectedBookmakers: string[];
   minProfit: number;
+  selectedTimeFilter: string;
   availableBookmakers: BookmakerWithCount[];
   onSportChange: (sport: string) => void;
   onBookmakerToggle: (bookmaker: string) => void;
   onMinProfitChange: (profit: number) => void;
+  onTimeFilterChange: (timeFilter: string) => void;
   onClearFilters: () => void;
   onSettingsClick: () => void;
 }
@@ -57,15 +73,17 @@ export function AppSidebar({
   selectedSport,
   selectedBookmakers,
   minProfit,
+  selectedTimeFilter,
   availableBookmakers = [],
   onSportChange,
   onBookmakerToggle,
   onMinProfitChange,
+  onTimeFilterChange,
   onClearFilters,
   onSettingsClick,
 }: AppSidebarProps) {
-  const hasFilters = selectedSport !== "all" || selectedBookmakers.length > 0 || minProfit > 0;
-  const activeFiltersCount = (selectedSport !== "all" ? 1 : 0) + selectedBookmakers.length + (minProfit > 0 ? 1 : 0);
+  const hasFilters = selectedSport !== "all" || selectedBookmakers.length > 0 || minProfit > 0 || selectedTimeFilter !== "all";
+  const activeFiltersCount = (selectedSport !== "all" ? 1 : 0) + selectedBookmakers.length + (minProfit > 0 ? 1 : 0) + (selectedTimeFilter !== "all" ? 1 : 0);
 
   return (
     <Sidebar data-testid="sidebar-main" className="border-r">
@@ -165,6 +183,51 @@ export function AppSidebar({
               <span className={cn(minProfit >= 4.5 && minProfit <= 5.5 && "text-primary font-semibold")}>5%</span>
               <span className={cn(minProfit === 10 && "text-primary font-semibold")}>10%</span>
             </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <Separator />
+
+        {/* Time Filter Section */}
+        <SidebarGroup>
+          <div className="flex items-center justify-between px-2 pb-4">
+            <SidebarGroupLabel className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5" />
+              Time Filter
+            </SidebarGroupLabel>
+            {selectedTimeFilter !== "all" && (
+              <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                1
+              </Badge>
+            )}
+          </div>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {TIME_FILTERS.map((timeFilter) => {
+                const isActive = selectedTimeFilter === timeFilter.value;
+                return (
+                  <SidebarMenuItem key={timeFilter.value}>
+                    <SidebarMenuButton
+                      onClick={() => onTimeFilterChange(timeFilter.value)}
+                      isActive={isActive}
+                      data-testid={`button-time-filter-${timeFilter.value}`}
+                      className={cn(
+                        "gap-3 h-11 px-3 rounded-lg font-medium transition-all",
+                        isActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                      )}
+                      tooltip={timeFilter.description}
+                    >
+                      <Clock className={cn(
+                        "h-4.5 w-4.5 transition-colors",
+                        isActive ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <span className="flex-1 text-sm">{timeFilter.label}</span>
+                      {isActive && <ChevronRight className="h-4 w-4 text-primary" />}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 

@@ -32,10 +32,12 @@ interface DashboardProps {
   selectedSport: string;
   selectedBookmakers: string[];
   minProfit: number;
+  selectedTimeFilter: string;
   availableBookmakers: BookmakerWithCount[];
   onSportChange: (sport: string) => void;
   onBookmakerToggle: (bookmaker: string) => void;
   onMinProfitChange: (profit: number) => void;
+  onTimeFilterChange: (timeFilter: string) => void;
   onClearFilters: () => void;
   onSettingsClick: () => void;
 }
@@ -44,10 +46,12 @@ export default function Dashboard({
   selectedSport,
   selectedBookmakers,
   minProfit,
+  selectedTimeFilter,
   availableBookmakers,
   onSportChange,
   onBookmakerToggle,
   onMinProfitChange,
+  onTimeFilterChange,
   onClearFilters,
   onSettingsClick,
 }: DashboardProps) {
