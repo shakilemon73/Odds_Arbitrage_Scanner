@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { TrendingUp, DollarSign, Clock, Target, Sparkles, ArrowUpRight } from "lucide-react";
+import { TrendingUp, DollarSign, Clock, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatsOverviewProps {
@@ -19,99 +19,53 @@ export function StatsOverview({
   
   const stats = [
     {
-      label: "Total Opportunities",
+      label: "Opportunities",
       value: isLoading ? "--" : totalOpportunities.toString(),
       icon: Target,
       color: "text-primary",
-      bgColor: "bg-primary/10",
-      borderColor: "border-primary/20",
-      change: totalOpportunities > 0 ? "Active" : "None",
-      trend: "up" as const,
     },
     {
       label: "Avg Profit",
       value: isLoading ? "--" : `${avgProfit.toFixed(2)}%`,
       icon: TrendingUp,
-      color: "text-success",
-      bgColor: "bg-success/10",
-      borderColor: "border-success/20",
-      change: avgProfit > 1 ? "Good" : "Low",
-      trend: "up" as const,
+      color: "text-emerald-600 dark:text-emerald-400",
     },
     {
       label: "Max Potential",
       value: isLoading ? "--" : `$${maxPotential.toFixed(0)}`,
       icon: DollarSign,
-      color: "text-warning",
-      bgColor: "bg-warning/10",
-      borderColor: "border-warning/20",
-      change: `On $${(totalOpportunities * 100).toFixed(0)}`,
-      trend: null,
+      color: "text-amber-600 dark:text-amber-400",
     },
     {
       label: "Last Update",
       value: isLoading ? "--" : lastUpdated,
       icon: Clock,
       color: "text-muted-foreground",
-      bgColor: "bg-muted/50",
-      borderColor: "border-border/50",
-      change: "Live data",
-      trend: null,
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
       {stats.map((stat, index) => (
         <Card 
           key={index} 
-          className={cn(
-            "relative overflow-hidden group hover-elevate transition-all duration-300",
-            "border-2", 
-            stat.borderColor
-          )} 
+          className="hover-elevate transition-all duration-200" 
           data-testid={`card-stat-${index}`}
         >
-          {/* Background gradient */}
-          <div className={cn(
-            "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-            "bg-gradient-to-br from-transparent to-black/5 dark:to-white/5"
-          )} />
-          
-          <div className="relative p-4 sm:p-5 lg:p-6 space-y-3 sm:space-y-4">
-            {/* Icon and Label */}
-            <div className="flex items-center justify-between">
-              <div className={cn(
-                "p-2 sm:p-2.5 lg:p-3 rounded-lg sm:rounded-xl transition-all duration-300",
-                stat.bgColor,
-                "group-hover:scale-110"
-              )}>
-                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", stat.color)} />
-              </div>
-              {stat.trend && (
-                <ArrowUpRight className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", stat.color, "opacity-50")} />
-              )}
+          <div className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <stat.icon className={cn("h-4 w-4", stat.color)} />
             </div>
-
-            {/* Label */}
-            <div className="space-y-1">
-              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-bold">
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground font-medium">
                 {stat.label}
               </p>
-              
-              {/* Value */}
               <p className={cn(
-                "text-2xl sm:text-3xl font-bold tracking-tight tabular-nums",
+                "text-xl sm:text-2xl font-bold tracking-tight",
                 isLoading && "animate-pulse",
                 stat.color
               )} data-testid={`text-stat-value-${index}`}>
                 {stat.value}
-              </p>
-              
-              {/* Change indicator */}
-              <p className="text-[10px] sm:text-xs text-muted-foreground font-medium flex items-center gap-1">
-                {stat.trend && <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />}
-                {stat.change}
               </p>
             </div>
           </div>
