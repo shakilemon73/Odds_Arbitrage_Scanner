@@ -125,22 +125,29 @@ Preferred communication style: Simple, everyday language.
 
 ### Database Architecture
 
-**Current State:**
-- In-memory storage for settings and cached opportunities
-- No persistent database currently implemented
-- Drizzle ORM configured for future PostgreSQL integration
+**Current State (October 2025):**
+- ✅ **External Neon PostgreSQL database** - User's own Neon instance integrated
+- ✅ **Persistent storage** - All data survives restarts and deployments
+- ✅ **Drizzle ORM** - Type-safe database queries with schema validation
+- ✅ **WebSocket configuration** - Neon serverless with ws library for connectivity
 
-**Future Migration Path:**
-- Drizzle schema definitions in `/shared/schema.ts`
-- PostgreSQL via Neon serverless connector planned
-- Migration files directory structure ready (`/migrations`)
-- Session management with connect-pg-simple configured
+**Database Tables:**
+- `settings` - User preferences, API configuration, notification settings
+- `historical_odds` - Tracks odds changes over time for line movement analysis
+- `bets` - Bet tracking with P/L history and CLV (Closing Line Value)
+- `promos` - Bookmaker promotion tracking and EV calculation
 
-**Storage Interface:**
-- `IStorage` interface for abstraction
-- `MemStorage` implementation for current in-memory operations
-- Settings management (mock mode, cache timeout)
-- Opportunities caching layer
+**Storage Implementation:**
+- `PostgresStorage` class using Drizzle ORM with Neon connector
+- Full CRUD operations for all entities
+- Type-safe queries with automatic schema validation
+- In-memory caching for real-time arbitrage opportunities (non-persistent)
+
+**Database Connection:**
+- Environment variable: `DATABASE_URL` (user's Neon connection string)
+- WebSocket support via `ws` library for serverless compatibility
+- Connection pooling with `@neondatabase/serverless`
+- Automatic reconnection and error handling
 
 ### Build and Deployment
 
