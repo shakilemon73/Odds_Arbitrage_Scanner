@@ -87,17 +87,7 @@ export default function Dashboard({
   } = useQuery<GetOddsResponse>({
     queryKey: [buildQueryUrl()],
     queryFn: async () => {
-      const apiKey = localStorage.getItem("oddsApiKey") || "";
-      
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      
-      if (apiKey.trim()) {
-        headers["x-api-key"] = apiKey;
-      }
-      
-      const response = await fetch(buildQueryUrl(), { headers });
+      const response = await fetch(buildQueryUrl());
       if (!response.ok) {
         try {
           const errorData = await response.json();

@@ -91,12 +91,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get settings to determine data sources
       const settings = await storage.getSettings();
       
-      // Get API key from environment or request header
-      const envApiKey = process.env.ODDS_API_KEY;
-      const headerApiKey = req.headers['x-api-key'] as string | undefined;
-      const apiKey = envApiKey || headerApiKey || undefined;
+      // Get API key from environment variable only (secure)
+      const apiKey = process.env.THE_ODDS_API_KEY;
       
-      console.log(`[API] API Key source: ${envApiKey ? 'environment' : headerApiKey ? 'header' : 'none'}`);
+      console.log(`[API] API Key source: ${apiKey ? 'environment' : 'none'}`);
       console.log(`[API] Show Mock: ${settings.showMockData}, Show Live: ${settings.showLiveData}`);
       
       // Map general sport categories to specific leagues

@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Eye, EyeOff } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 
 interface SettingsDialogProps {
@@ -21,8 +20,6 @@ interface SettingsDialogProps {
 }
 
 export default function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("oddsApiKey") || "");
-  const [showApiKey, setShowApiKey] = useState(false);
   const [mockMode, setMockMode] = useState(() => localStorage.getItem("mockMode") === "true");
   const [autoRefreshInterval, setAutoRefreshInterval] = useState(30);
   const [showMockData, setShowMockData] = useState(true);
@@ -55,13 +52,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     }
   };
 
-  const handleApiKeyChange = (value: string) => {
-    setApiKey(value);
-    setSaveError(null);
-    if (value.trim().length > 0 && mockMode) {
-      setMockMode(false);
-    }
-  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -83,7 +73,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         throw new Error(`Server error: ${response.status}`);
       }
       
-      localStorage.setItem("oddsApiKey", apiKey);
       localStorage.setItem("mockMode", mockMode.toString());
       
       // Invalidate all odds queries to force immediate refetch with new settings
@@ -105,7 +94,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   };
 
   const handleCancel = () => {
-    setApiKey(localStorage.getItem("oddsApiKey") || "");
     setMockMode(localStorage.getItem("mockMode") === "true");
     setSaveError(null);
     loadSettings();
@@ -123,46 +111,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="api-key">Odds API Key</Label>
-            <div className="relative">
-              <Input
-                id="api-key"
-                type={showApiKey ? "text" : "password"}
-                placeholder="Enter your API key"
-                value={apiKey}
-                onChange={(e) => handleApiKeyChange(e.target.value)}
-                className="pr-12 !h-11"
-                data-testid="input-api-key"
-                aria-label="API key"
-                aria-invalid={!!saveError}
-                autoComplete="off"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                className="absolute right-0 top-0 !h-11 !w-11 !p-0 hover:bg-transparent"
-                onClick={() => setShowApiKey(!showApiKey)}
-                data-testid="button-toggle-api-key"
-                aria-label={showApiKey ? "Hide API key" : "Show API key"}
-              >
-                {showApiKey ? (
-                  <EyeOff className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Eye className="h-4 w-4" aria-hidden="true" />
-                )}
-              </Button>
-            </div>
+          <div className="p-4 rounded-lg bg-muted/50 border">
+            <p className="text-sm font-medium mb-1">API Key Configuration</p>
             <p className="text-xs text-muted-foreground">
-              Get your key from{" "}
-              <a
-                href="https://the-odds-api.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
-              >
-                the-odds-api.com
-              </a>
+              API key is securely configured via environment variable THE_ODDS_API_KEY. Contact your administrator to update the API key.
             </p>
           </div>
 
@@ -171,10 +123,8 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
               <Label htmlFor="mock-mode">Mock Data Mode</Label>
               <p className="text-xs text-muted-foreground">
                 {mockMode 
-                  ? "Using simulated data"
-                  : apiKey.trim()
-                    ? "Using live data"
-                    : "Add API key for live data"}
+                  ? "Using simulated data for testing"
+                  : "Using live data from The Odds API"}
               </p>
             </div>
             <Switch
@@ -232,7 +182,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
               <div className="space-y-0.5 flex-1">
                 <Label htmlFor="show-live">Show Live Data</Label>
                 <p className="text-xs text-muted-foreground">
-                  Display real-time API data {!apiKey.trim() && "(requires API key)"}
+                  Display real-time API data from The Odds API
                 </p>
               </div>
               <Switch
@@ -241,7 +191,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
                 onCheckedChange={setShowLiveData}
                 data-testid="switch-show-live"
                 aria-label="Toggle live data display"
-                disabled={!apiKey.trim()}
               />
             </div>
           </div>
