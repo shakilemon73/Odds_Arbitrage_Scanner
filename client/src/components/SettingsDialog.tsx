@@ -117,7 +117,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]" data-testid="dialog-settings" aria-describedby="dialog-description">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col" data-testid="dialog-settings" aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription id="dialog-description">
@@ -125,7 +125,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 overflow-y-auto flex-1">
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="api-key">The Odds API Key</Label>
