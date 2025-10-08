@@ -107,17 +107,17 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
       live: {
         label: "Live",
         icon: Wifi,
-        className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+        className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800",
       },
       mock: {
         label: "Mock",
         icon: TestTube,
-        className: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30",
+        className: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800",
       },
       cached: {
         label: "Cached",
         icon: Database,
-        className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
+        className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
       },
     };
 
@@ -127,28 +127,35 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
     return (
       <Badge
         variant="outline"
-        className={cn("gap-1 text-[10px] font-semibold px-1.5 py-0", config.className)}
+        className={cn("gap-1 text-xs font-medium px-2 py-0.5", config.className)}
         data-testid={`badge-source-${opportunity.dataSource}`}
       >
-        <SourceIcon className="h-2.5 w-2.5" />
+        <SourceIcon className="h-3 w-3" />
         {config.label}
       </Badge>
     );
   };
 
-  const profitTextClass =
+  const profitColor =
     profitLevel === "high"
       ? "text-emerald-600 dark:text-emerald-400"
       : profitLevel === "medium"
       ? "text-amber-600 dark:text-amber-400"
       : "text-muted-foreground";
 
+  const profitBg =
+    profitLevel === "high"
+      ? "bg-emerald-50 dark:bg-emerald-950/30"
+      : profitLevel === "medium"
+      ? "bg-amber-50 dark:bg-amber-950/30"
+      : "bg-muted/50";
+
   return (
     <Card
       className={cn(
-        "group hover-elevate active-elevate-2 cursor-pointer transition-all",
+        "border-0 shadow-sm hover:shadow-md hover-elevate active-elevate-2 cursor-pointer transition-all",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        startingSoon && "border-primary/50"
+        startingSoon && "ring-2 ring-primary/50"
       )}
       onClick={onClick}
       onKeyDown={handleKeyDown}
@@ -157,15 +164,15 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
       aria-label={`${opportunity.match}, ${opportunity.profit.toFixed(2)}% profit, ${getProfitLabel()}`}
       data-testid={`card-opportunity-${opportunity.id}`}
     >
-      <CardContent className="p-3 sm:p-4 space-y-3">
+      <CardContent className="p-4 space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2 flex-1 min-w-0">
-            <div className="mt-0.5 p-1.5 rounded-md bg-primary/10 shrink-0">
-              <SportIcon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+            <div className="mt-0.5 p-2 rounded-lg bg-primary/10 shrink-0">
+              <SportIcon className="h-4 w-4 text-primary" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm leading-tight mb-0.5" data-testid="text-match">
+              <h3 className="font-semibold text-sm leading-tight mb-1" data-testid="text-match">
                 {opportunity.match}
               </h3>
               <p className="text-xs text-muted-foreground">{opportunity.sport}</p>
@@ -178,30 +185,30 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
               {opportunity.hold !== undefined && opportunity.hold < 2 && (
                 <Badge
                   variant="outline"
-                  className="gap-1 text-[10px] font-semibold px-1.5 py-0 bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/30"
+                  className="gap-1 text-xs font-medium px-2 py-0.5 bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-400 dark:border-cyan-800"
                   data-testid="badge-low-hold"
                 >
-                  <Shield className="h-2.5 w-2.5" />
+                  <Shield className="h-3 w-3" />
                   Low Hold
                 </Badge>
               )}
               {opportunity.isMiddle && (
                 <Badge
                   variant="outline"
-                  className="gap-1 text-[10px] font-semibold px-1.5 py-0 bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30"
+                  className="gap-1 text-xs font-medium px-2 py-0.5 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800"
                   data-testid="badge-middle"
                 >
-                  <TrendingUp className="h-2.5 w-2.5" />
+                  <TrendingUp className="h-3 w-3" />
                   Middle
                 </Badge>
               )}
               {opportunity.bookmakers.some(b => (b.ev || 0) > 5) && (
                 <Badge
                   variant="outline"
-                  className="gap-1 text-[10px] font-semibold px-1.5 py-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                  className="gap-1 text-xs font-medium px-2 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800"
                   data-testid="badge-high-ev"
                 >
-                  <Zap className="h-2.5 w-2.5" />
+                  <Zap className="h-3 w-3" />
                   High +EV
                 </Badge>
               )}
@@ -225,16 +232,16 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
         </div>
 
         {/* Profit Section */}
-        <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-muted/50">
+        <div className={cn("flex items-center justify-between p-3 rounded-lg", profitBg)}>
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Return</p>
-            <p className={cn("text-xl sm:text-2xl font-bold tabular-nums", profitTextClass)} data-testid="text-profit">
+            <p className={cn("text-2xl font-bold tabular-nums", profitColor)} data-testid="text-profit">
               {opportunity.profit.toFixed(2)}%
             </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground mb-0.5">Profit</p>
-            <p className={cn("text-lg sm:text-xl font-bold tabular-nums", profitTextClass)} data-testid="text-profit-amount">
+            <p className={cn("text-xl font-bold tabular-nums", profitColor)} data-testid="text-profit-amount">
               ${guaranteedProfit.toFixed(2)}
             </p>
           </div>
@@ -251,11 +258,11 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
           {opportunity.bookmakers.map((bookmaker, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between gap-2 p-2 rounded-md bg-card/50 border hover-elevate"
+              className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/30 hover-elevate"
               data-testid={`bookmaker-bet-${idx}`}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <Badge variant="outline" className="shrink-0 font-medium text-[10px] px-1.5 py-0">
+                <Badge variant="outline" className="shrink-0 font-medium text-xs px-2 py-0.5">
                   {bookmaker.name}
                 </Badge>
                 <span className="font-medium text-xs truncate" data-testid="text-outcome">
@@ -263,7 +270,7 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-3 shrink-0">
                 <div className="text-right">
                   <p className="text-[10px] text-muted-foreground">Odds</p>
                   <p className="text-xs font-semibold tabular-nums" data-testid="text-odds">
@@ -296,7 +303,7 @@ export default function ArbitrageCard({ opportunity, onClick }: ArbitrageCardPro
 
         {/* Middle Win Scenarios */}
         {opportunity.isMiddle && opportunity.middleInfo?.winScenarios && (
-          <div className="p-2 rounded-md bg-purple-500/10 border border-purple-500/30">
+          <div className="p-2.5 rounded-md bg-purple-50 border border-purple-200 dark:bg-purple-950/30 dark:border-purple-800">
             <h4 className="text-xs font-semibold text-purple-700 dark:text-purple-400 mb-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
               Middle - Win Both Bets!
