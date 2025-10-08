@@ -239,6 +239,25 @@ export type Promo = z.infer<typeof promoSchema>;
 export const insertPromoSchema = promoSchema.omit({ id: true, timestamp: true });
 export type InsertPromo = z.infer<typeof insertPromoSchema>;
 
+// Event schema for stored events
+export const eventSchema = z.object({
+  id: z.string(),
+  eventId: z.string(),
+  sportKey: z.string(),
+  sportTitle: z.string(),
+  homeTeam: z.string(),
+  awayTeam: z.string(),
+  commenceTime: z.string(),
+  bookmakers: z.array(oddsApiBookmakerSchema),
+  createdAt: z.string(),
+  lastUpdated: z.string(),
+});
+
+export type Event = z.infer<typeof eventSchema>;
+
+export const insertEventSchema = eventSchema.omit({ id: true, createdAt: true, lastUpdated: true });
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+
 // Notification preferences (Task 11)
 export const notificationPreferencesSchema = z.object({
   enabled: z.boolean().default(false),
@@ -341,3 +360,20 @@ export const promosTable = pgTable("promos", {
 
 export type PromoRow = typeof promosTable.$inferSelect;
 export type InsertPromoRow = typeof promosTable.$inferInsert;
+
+// Events table - stores sports events/matches from API
+export const eventsTable = pgTable("events", {
+  id: serial("id").primaryKey(),
+  eventId: text("event_id").notNull().unique(),
+  sportKey: text("sport_key").notNull(),
+  sportTitle: text("sport_title").notNull(),
+  homeTeam: text("home_team").notNull(),
+  awayTeam: text("away_team").notNull(),
+  commenceTime: timestamp("commence_time").notNull(),
+  bookmakers: jsonb("bookmakers").$type<OddsApiBookmaker[]>().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+});
+
+export type EventRow = typeof eventsTable.$inferSelect;
+export type InsertEventRow = typeof eventsTable.$inferInsert;

@@ -13,13 +13,16 @@ import type {
   Bet,
   InsertBet,
   Promo,
-  InsertPromo
+  InsertPromo,
+  Event,
+  InsertEvent
 } from "@shared/schema";
 import {
   settingsTable,
   historicalOddsTable,
   betsTable,
   promosTable,
+  eventsTable,
 } from "@shared/schema";
 
 // ============================================================================
@@ -52,6 +55,14 @@ export interface IStorage {
   getPromo(id: string): Promise<Promo | null>;
   updatePromo(id: string, updates: Partial<Promo>): Promise<Promo>;
   deletePromo(id: string): Promise<void>;
+  
+  // Event storage for API data persistence
+  saveEvent(event: InsertEvent): Promise<Event>;
+  getEvents(options?: { thisWeekOnly?: boolean }): Promise<Event[]>;
+  getEvent(eventId: string): Promise<Event | null>;
+  updateEvent(eventId: string, updates: Partial<Event>): Promise<Event>;
+  deleteEvent(eventId: string): Promise<void>;
+  cleanupOldEvents(): Promise<number>; // Returns count of deleted events
 }
 
 // PostgreSQL Storage Implementation
@@ -375,6 +386,145 @@ export class PostgresStorage implements IStorage {
 
   async deletePromo(id: string): Promise<void> {
     await this.db.delete(promosTable).where(eq(promosTable.id, parseInt(id)));
+  }
+
+  // Event storage implementation
+  async saveEvent(data: InsertEvent): Promise<Event> {
+    // Check if event already exists
+    const existing = await this.getEvent(data.eventId);
+    
+    if (existing) {
+      // Update existing event
+      return this.updateEvent(data.eventId, data);
+    }
+
+    const [inserted] = await this.db
+      .insert(eventsTable)
+      .values({
+        eventId: data.eventId,
+        sportKey: data.sportKey,
+        sportTitle: data.sportTitle,
+        homeTeam: data.homeTeam,
+        awayTeam: data.awayTeam,
+        commenceTime: new Date(data.commenceTime),
+        bookmakers: data.bookmakers,
+      })
+      .returning();
+
+    return {
+      id: inserted.id.toString(),
+      eventId: inserted.eventId,
+      sportKey: inserted.sportKey,
+      sportTitle: inserted.sportTitle,
+      homeTeam: inserted.homeTeam,
+      awayTeam: inserted.awayTeam,
+      commenceTime: inserted.commenceTime.toISOString(),
+      bookmakers: inserted.bookmakers as any,
+      createdAt: inserted.createdAt.toISOString(),
+      lastUpdated: inserted.lastUpdated.toISOString(),
+    };
+  }
+
+  async getEvents(options?: { thisWeekOnly?: boolean }): Promise<Event[]> {
+    const now = new Date();
+    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    let query = this.db.select().from(eventsTable);
+
+    if (options?.thisWeekOnly) {
+      // Only get events in the next week that haven't started yet
+      const { and, gte, lte } = await import("drizzle-orm");
+      query = query.where(
+        and(
+          gte(eventsTable.commenceTime, now),
+          lte(eventsTable.commenceTime, oneWeekFromNow)
+        )
+      ) as any;
+    }
+
+    const results = await query;
+
+    return results.map(row => ({
+      id: row.id.toString(),
+      eventId: row.eventId,
+      sportKey: row.sportKey,
+      sportTitle: row.sportTitle,
+      homeTeam: row.homeTeam,
+      awayTeam: row.awayTeam,
+      commenceTime: row.commenceTime.toISOString(),
+      bookmakers: row.bookmakers as any,
+      createdAt: row.createdAt.toISOString(),
+      lastUpdated: row.lastUpdated.toISOString(),
+    }));
+  }
+
+  async getEvent(eventId: string): Promise<Event | null> {
+    const [result] = await this.db
+      .select()
+      .from(eventsTable)
+      .where(eq(eventsTable.eventId, eventId));
+
+    if (!result) return null;
+
+    return {
+      id: result.id.toString(),
+      eventId: result.eventId,
+      sportKey: result.sportKey,
+      sportTitle: result.sportTitle,
+      homeTeam: result.homeTeam,
+      awayTeam: result.awayTeam,
+      commenceTime: result.commenceTime.toISOString(),
+      bookmakers: result.bookmakers as any,
+      createdAt: result.createdAt.toISOString(),
+      lastUpdated: result.lastUpdated.toISOString(),
+    };
+  }
+
+  async updateEvent(eventId: string, updates: Partial<Event>): Promise<Event> {
+    const dbUpdates: any = { lastUpdated: new Date() };
+    
+    if (updates.sportKey !== undefined) dbUpdates.sportKey = updates.sportKey;
+    if (updates.sportTitle !== undefined) dbUpdates.sportTitle = updates.sportTitle;
+    if (updates.homeTeam !== undefined) dbUpdates.homeTeam = updates.homeTeam;
+    if (updates.awayTeam !== undefined) dbUpdates.awayTeam = updates.awayTeam;
+    if (updates.commenceTime !== undefined) dbUpdates.commenceTime = new Date(updates.commenceTime);
+    if (updates.bookmakers !== undefined) dbUpdates.bookmakers = updates.bookmakers;
+
+    const [updated] = await this.db
+      .update(eventsTable)
+      .set(dbUpdates)
+      .where(eq(eventsTable.eventId, eventId))
+      .returning();
+
+    return {
+      id: updated.id.toString(),
+      eventId: updated.eventId,
+      sportKey: updated.sportKey,
+      sportTitle: updated.sportTitle,
+      homeTeam: updated.homeTeam,
+      awayTeam: updated.awayTeam,
+      commenceTime: updated.commenceTime.toISOString(),
+      bookmakers: updated.bookmakers as any,
+      createdAt: updated.createdAt.toISOString(),
+      lastUpdated: updated.lastUpdated.toISOString(),
+    };
+  }
+
+  async deleteEvent(eventId: string): Promise<void> {
+    await this.db.delete(eventsTable).where(eq(eventsTable.eventId, eventId));
+  }
+
+  async cleanupOldEvents(): Promise<number> {
+    const now = new Date();
+    const { lt } = await import("drizzle-orm");
+    
+    const result = await this.db
+      .delete(eventsTable)
+      .where(lt(eventsTable.commenceTime, now))
+      .returning();
+
+    console.log(`[Cleanup] Deleted ${result.length} old events`);
+    return result.length;
   }
 }
 
